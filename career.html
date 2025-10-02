@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Study Tools — Career & Study Hub</title>
+<style>
+.home {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 40px;
+}
+
+.circle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: #0077b6;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.circle:hover {
+  transform: scale(1.05);
+  background: #005f86;
+}
+
+.tabContent {
+  background: #f9fbff;
+  border: 2px solid #0077b6;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px auto;
+  color: #005f86;
+  max-width: 650px;
+}
+
+#journalInput {
+  width: 100%;
+  height: 150px;
+  border: 1px solid #0077b6;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 1rem;
+  outline: none;
+  margin-bottom: 10px;
+}
+
+button {
+  background: #0077b6;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 15px;
+  margin: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+button:hover {
+  background: #005f86;
+}
+
+.hidden {
+  display: none;
+}
+
+#journalArchive li {
+  background: #eaf6ff;
+  padding: 8px;
+  border-radius: 6px;
+  margin: 5px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.journal-controls {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+  
+:root{
+  --blue:#0077b6;
+  --blue-dark:#005f86;
+  --muted:#6b7280;
+  --bg:#e8f6ff;
+  --card:#ffffff;
+  --green:#27ae60;
+  --orange:#f39c12;
+  --purple:#8e44ad;
+  --red:#e74c3c;
+  --yellow:#f1c40f;
+}
+/* BODY */
+body{
+  font-family: Arial, Helvetica, sans-serif;
+  margin:0;
+  background:var(--bg);
+  color:#122;
+  line-height:1.4;
+}
+/* HEADER */
+h1{
+  text-align:center;
+  color:#0d3b66;
+  margin:18px 0;
+  font-size:34px;
+  letter-spacing:1px;
+  text-shadow:0 2px 4px rgba(0,0,0,0.1);
+}
+/* HOME CIRCLES */
+.home {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:40px;
+  flex-wrap:wrap;
+  padding:60px 12px;
+}
+.circle{
+  width:200px;
+  height:200px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  cursor:pointer;
+  color:#fff;
+  font-weight:800;
+  padding:14px;
+  box-shadow:0 10px 28px rgba(3,7,18,0.12);
+  transition:transform .15s, box-shadow .15s;
+  font-size:20px;
+}
+.circle:hover{
+  transform:scale(1.08);
+  box-shadow:0 16px 40px rgba(3,7,18,0.18);
+}
+.circle.study{background:#00b4d8;}
+.circle.career{background:var(--blue);}
+
+/* PAGE CONTAINER */
+.page {max-width:980px;margin:18px auto;padding:0 14px;}
+
+/* TABS */
+.tabs{display:flex;gap:12px;justify-content:center;margin-bottom:24px;flex-wrap:wrap;}
+.tab{
+  padding:16px 22px;
+  border-radius:10px;
+  background:var(--blue);
+  color:#fff;
+  cursor:pointer;
+  font-weight:700;
+  font-size:20px;
+  transition:0.2s;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+.tab.inactive{background:#cfeefc;color:#0d3b66;}
+.tab.active{background:var(--blue-dark);}
+
+/* CARDS */
+.card{
+  background:var(--card);
+  border-radius:12px;
+  padding:24px;
+  box-shadow:0 8px 28px rgba(3,7,18,0.08);
+  margin-bottom:24px;
+  transition:0.2s;
+}
+.card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 36px rgba(3,7,18,0.12);
+}
+.card h2{margin-top:0;color:#0d3b66;font-size:24px;}
+.card p{margin:6px 0;color:#122;font-size:16px;}
+
+/* BUTTONS */
+button{
+  font-weight:700;
+  border-radius:8px;
+  border:none;
+  padding:10px 16px;
+  cursor:pointer;
+  transition:0.2s;
+}
+button:disabled{opacity:.5;cursor:not-allowed;}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-primary:active{background:var(--blue-dark);}
+.btn-secondary{background:#6b7280;color:white;}
+.btn-close{background:var(--green);color:white;margin-top:12px;}
+
+/* FORM ELEMENTS */
+input, select{
+  padding:10px 12px;
+  border-radius:6px;
+  border:1px solid #cfeefc;
+  margin:6px 0;
+  width:100%;
+  font-size:16px;
+}
+
+/* TIMER */
+#persistentTimer{
+  display:none;
+  position:fixed;
+  bottom:10px;
+  right:10px;
+  background:var(--yellow);
+  padding:16px 24px;
+  border-radius:12px;
+  font-size:24px;
+  font-weight:bold;
+  z-index:1000;
+  box-shadow:0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* TIMER CONTROLS */
+#timerControls{margin-top:16px;display:flex;gap:12px;justify-content:center;}
+#timerControls button{padding:10px 18px;font-size:16px;}
+
+/* GOOD JOB MESSAGE */
+#goodJobMessageGen, #goodJobMessageTracker{
+  background:var(--green);
+  color:white;
+  border-radius:8px;
+  padding:14px;
+  margin-top:16px;
+  display:none;
+  font-size:18px;
+  text-align:center;
+}
+
+/* AUDIO ALARM */
+#audioAlarm{margin-top:16px;}
+
+/* MUSIC OVERLAY */
+#overlay {
+  position: fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.3);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+}
+#playMusicBtn {
+  padding:40px 60px;
+  background-color:var(--orange);
+  color:#fff;
+  border:none;
+  border-radius:18px;
+  cursor:pointer;
+  font-size:24px;
+  text-align:center;
+  line-height:1.5;
+  box-shadow:0 8px 20px rgba(0,0,0,0.3);
+  transition:0.2s;
+}
+#playMusicBtn:hover{transform:scale(1.05);}
+
+/* MAINPAGE & MUTE */
+#mainpageBtn {
+  position: fixed;
+  top: 10px; right: 10px;
+  padding: 10px 16px;
+  background-color: #3498db;
+  color: white;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:16px;
+  z-index:1;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2);
+}
+#muteBtn {
+  position: fixed;
+  bottom: 10px; left: 10px;
+  padding:10px 16px;
+  background-color:#2ecc71;
+  color:white;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:16px;
+  z-index:1;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* BACK BUTTON */
+#backBtn {
+  position: fixed;
+  top: 10px; left: 10px;
+  padding: 10px 16px;
+  background-color: #e74c3c;
+  color:white;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:16px;
+  z-index:1;
+  box-shadow:0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* CAREER SELECTOR SPECIFIC */
+#careerGrid { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; padding:12px; }
+.careerCard { width:180px; height:140px; border-radius:12px; display:flex; align-items:center; justify-content:center; text-align:center; cursor:pointer; color:#fff; font-weight:700; box-shadow:0 6px 18px rgba(0,0,0,0.08); padding:12px; }
+.careerCard p{margin:0; padding:0 6px;}
+#careerTabs { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:12px; }
+.smallBtn { padding:8px 12px; border-radius:8px; border:none; cursor:pointer; }
+.stageBox { background:#f7fbff; border-radius:10px; padding:12px; margin-top:12px; }
+
+/* SPACERS FOR 600+ LINES */
+.spacer{height:12px;}
+
+body { font-family: Arial, sans-serif; background: #f0f4f8; margin: 0; padding: 0; }
+.page { display: none; padding: 20px; }
+.page.active { display: block; }
+.circleBtn { display: inline-block; margin: 10px; padding: 20px; border-radius: 50%; background: #4a90e2; color: white; text-align: center; cursor: pointer; font-size: 16px; width: 120px; height: 120px; line-height: 80px; }
+.navBtn { margin: 5px; padding: 10px 20px; background: #9013fe; color: white; border: none; border-radius: 8px; cursor: pointer; }
+#timelineSlider { width: 100%; margin-top: 10px; }
+#progressContainer { width: 100%; background: #ddd; border-radius: 8px; margin-top: 10px; }
+#progressBar { width: 0%; height: 20px; background: #4a90e2; border-radius: 8px; }
+#tabs { display:flex; flex-wrap:wrap; justify-content:space-around; background:#fff; padding:10px; position:fixed; bottom:0; width:100%; box-shadow:0 -2px 5px rgba(0,0,0,0.2); }
+#tabs button { flex:1 0 20%; margin:2px; }
+.btn-secondary { margin:5px; padding:10px 20px; background:#50e3c2; border:none; border-radius:8px; cursor:pointer; color:black; }
+
+
+</style>
+</head>
+<body>
+
+<!-- MAINPAGE BUTTONS -->
+<button id="mainpageBtn" onclick="location.href='index.html'">🏠 Mainpage</button>
+<button id="muteBtn">🔈 Mute</button>
+<button id="backBtn" style="display:none;">⬅️ Back</button>
+
+<!-- OVERLAY MUSIC -->
+<div id="overlay">
+  <button id="playMusicBtn">🎵 Play Music & Relax 🎵<br>Music calms your mind!</button>
+</div>
+
+<!-- BACKGROUND MUSIC -->
+<audio id="bgMusic" loop>
+  <source src="calm-soft-background-music-398280.mp3" type="audio/mpeg">
+</audio>
+
+<h1>📚 Study Tools Hub</h1>
+
+<!-- HOME SCREEN -->
+<div class="home" id="homeScreen">
+  <div class="circle study">📚 Study Tools</div>
+  <div class="circle career">💼 Career Selector</div>
+  
+
+</div>
+
+<!-- STUDY PAGE (unchanged) -->
+<div id="studyPage" style="display:none;">
+  <div class="tabs">
+    <div class="tab active" id="genTab">📝 Schedule Generator</div>
+    <div class="tab inactive" id="trackerTab">📋 Assignment Tracker</div>
+    <div class="tab inactive" id="timerTab">⏲️ Pomodoro Timer</div>
+  </div>
+
+  <!-- SCHEDULE GENERATOR -->
+  <div id="generator" class="card">
+    <h2>📝 Schedule Generator</h2>
+    <label for="scheduleName">Assignment Name:</label>
+    <input type="text" id="scheduleName" placeholder="Enter assignment name">
+    <label for="scheduleMinutes">Minutes:</label>
+    <input type="number" id="scheduleMinutes" placeholder="Enter duration in minutes">
+    <label for="subjectSelect">Choose Subject Color:</label>
+    <select id="subjectSelect">
+      <option value="#0077b6">Math 🧮</option>
+      <option value="#f39c12">English 📖</option>
+      <option value="#8e44ad">Science 🔬</option>
+      <option value="#27ae60">History 🏺</option>
+      <option value="#d35400">Art 🎨</option>
+    </select>
+    <label for="priority">Select Priority:</label>
+    <select id="priority">
+      <option value="⭐1">⭐1</option>
+      <option value="⭐⭐2">⭐⭐2</option>
+      <option value="⭐⭐⭐3">⭐⭐⭐3</option>
+      <option value="⭐⭐⭐⭐4">⭐⭐⭐⭐4</option>
+      <option value="⭐⭐⭐⭐⭐5">⭐⭐⭐⭐⭐5</option>
+    </select>
+    <button class="btn-primary" onclick="addSchedule()">➕ Add to Schedule</button>
+    <ul id="scheduleList"></ul>
+    <div id="goodJobMessageGen">🎉 Good Job! 🎉 <button class="btn-close" onclick="closeGoodJobGen()">Close</button></div>
+  </div>
+
+  
+
+
+
+
+
+  
+
+
+  <!-- ASSIGNMENT TRACKER -->
+  <div id="tracker" class="card" style="display:none;">
+    <h2>📋 Assignment Tracker</h2>
+    <label for="assignmentName">Assignment Name:</label>
+    <input type="text" id="assignmentName" placeholder="Enter assignment name">
+    <label for="trackerPriority">Priority:</label>
+    <select id="trackerPriority">
+      <option value="⭐1">⭐1</option>
+      <option value="⭐⭐2">⭐⭐2</option>
+      <option value="⭐⭐⭐3">⭐⭐⭐3</option>
+      <option value="⭐⭐⭐⭐4">⭐⭐⭐⭐4</option>
+      <option value="⭐⭐⭐⭐⭐5">⭐⭐⭐⭐⭐5</option>
+    </select>
+    <label for="assignmentDate">Due Date:</label>
+    <input type="date" id="assignmentDate">
+    <button class="btn-primary" onclick="addAssignment()">➕ Add Assignment</button>
+    <ul id="assignmentList"></ul>
+    <div id="goodJobMessageTracker">🎉 Good Job! 🎉 <button class="btn-close" onclick="closeGoodJobTracker()">Close</button></div>
+  </div>
+
+  <!-- TIMER -->
+  <div id="timer" class="card" style="display:none;">
+    <h2>⏲️ Pomodoro Timer</h2>
+    <label for="workMinutes">Work Minutes:</label>
+    <input type="number" id="workMinutes" value="25">
+    <label for="breakMinutes">Break Minutes:</label>
+    <input type="number" id="breakMinutes" value="5">
+    <button class="btn-primary" onclick="startTimer()">▶️ Start Timer</button>
+    <div id="timerControls">
+      <button onclick="pauseTimer()">⏸️ Pause</button>
+      <button onclick="resetTimer()">⏹️ Reset</button>
+    </div>
+  </div>
+
+  <!-- PERSISTENT TIMER -->
+  <div id="persistentTimer">00:00</div>
+
+  <!-- AUDIO -->
+  <div id="audioAlarm">
+    <audio id="alarmAudio" src="Alarm 1.mp3" preload="auto"></audio>
+    <audio id="alarmAudio" src="Alarm 2.mp3" preload="auto"></audio>
+    <audio id="alarmAudio" src="Alarm 3.mp3" preload="auto"></audio>
+    <audio id="alarmAudio" src="Alarm 4.mp3" preload="auto"></audio>
+    <audio id="alarmAudio" src="Alarm 5.mp3" preload="auto"></audio>
+  </div>
+</div>
+
+<!-- ---------------------------
+     CAREER SELECTOR PAGES
+     (replaced/cleaned; 25 careers + 30-question survey)
+     --------------------------- -->
+
+<!-- Career Grid Page -->
+<div id="careerGridPage" class="page">
+  <h1>🌟 Career Selector Hub 🌟</h1>
+
+  <div id="careerTabs" style="margin-bottom:10px;">
+    <button class="smallBtn tab active" id="careersTabBtn">💼 Careers</button>
+    <button class="smallBtn tab inactive" id="surveyTabBtn">📝 Survey</button>
+    
+  </div>
+
+  <!-- Careers grid -->
+  <div id="careerGrid" class="card">
+    <div id="careerGridInner" style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;"></div>
+  </div>
+</div>
+
+<!-- Career Detail Page -->
+<div id="careerDetailPage" class="page">
+  <button class="navBtn" id="careerBackBtn">⬅ Back</button>
+  <h2 id="careerTitle"></h2>
+  <div id="careerStageEmoji" style="font-size:28px;margin:6px 0;"></div>
+  <div id="careerDescription" class="card"></div>
+
+  <label for="timelineSlider">Timeline (move to see stages):</label>
+  <input type="range" id="timelineSlider" min="0" max="4" step="1" value="0">
+  <div class="stageBox" id="stageLabel"></div>
+
+  <div style="margin-top:12px;">
+    <button class="btn-primary" id="viewSurveyBtn">📝 Take Survey</button>
+    <button class="btn-secondary" id="openHomeBtn">🏠 Home</button>
+  </div>
+</div>
+
+<!-- Survey Page -->
+<div id="surveyPage" class="page">
+  <button class="navBtn" id="surveyBackBtn">⬅ Back</button>
+  <h2>📝 Career Survey</h2>
+  <div id="progressContainer" style="background:#cfeefc;width:100%;border-radius:12px;margin:12px 0;">
+    <div id="progressBar" style="width:0%;height:20px;background:var(--blue);border-radius:12px;"></div>
+  </div>
+
+  <div id="surveyQuestionContainer" style="font-weight:700;font-size:18px;margin-top:6px;"></div>
+  <div id="surveyOptionsContainer" style="display:flex;flex-direction:column;gap:12px;margin-top:12px;"></div>
+
+  <div id="surveyResult" style="margin-top:18px;"></div>
+</div>
+
+<!-- Extra spacers -->
+<div class="spacer"></div><div class="spacer"></div><div class="spacer"></div>
+
+<script>
+// ------------------ Existing functionality retained (music, home/study navigation, study tools, timer, schedule code) ------------------
+
+// MUSIC CONTROLS
+const overlay=document.getElementById('overlay');
+const playBtn=document.getElementById('playMusicBtn');
+const bgMusic=document.getElementById('bgMusic');
+const muteBtn=document.getElementById('muteBtn');
+playBtn.addEventListener('click',()=>{bgMusic.play(); overlay.style.display='none';});
+muteBtn.addEventListener('click',()=>{
+  if(bgMusic.paused){bgMusic.play(); muteBtn.textContent='🔈 Mute';}
+  else{bgMusic.pause(); muteBtn.textContent='🔇 Unmute';}
+});
+
+// BACK BUTTON (generic; used for study page)
+const backBtn=document.getElementById('backBtn');
+backBtn.addEventListener('click', ()=>{
+  // If study page visible -> go home
+  document.getElementById('studyPage').style.display='none';
+  document.getElementById('homeScreen').style.display='flex';
+  backBtn.style.display='none';
+});
+
+// HOME TO STUDY PAGE
+document.querySelector('.circle.study').addEventListener('click', ()=>{
+  document.getElementById('homeScreen').style.display='none';
+  document.getElementById('studyPage').style.display='block';
+  backBtn.style.display='block';
+});
+
+// TABS (study)
+const genTab=document.getElementById('genTab');
+const trackerTab=document.getElementById('trackerTab');
+const timerTab=document.getElementById('timerTab');
+genTab.addEventListener('click',()=>switchTab('generator'));
+trackerTab.addEventListener('click',()=>switchTab('tracker'));
+timerTab.addEventListener('click',()=>switchTab('timer'));
+function switchTab(tab){
+  document.getElementById('generator').style.display='none';
+  document.getElementById('tracker').style.display='none';
+  document.getElementById('timer').style.display='none';
+  document.getElementById(tab).style.display='block';
+  genTab.className='tab inactive';
+  trackerTab.className='tab inactive';
+  timerTab.className='tab inactive';
+  if(tab==='generator') genTab.className='tab active';
+  if(tab==='tracker') trackerTab.className='tab active';
+  if(tab==='timer') timerTab.className='tab active';
+}
+
+// SCHEDULE GENERATOR
+function addSchedule(){
+  const name=document.getElementById('scheduleName').value.trim();
+  const minutes=document.getElementById('scheduleMinutes').value.trim();
+  const subject=document.getElementById('subjectSelect');
+  const priority=document.getElementById('priority');
+  if(!name || !minutes) return alert("Enter assignment name and minutes!");
+  const li=document.createElement('li');
+  li.innerHTML=`<input type="checkbox" onclick="showGoodJobGen(this)"> ${name} - ${minutes} min - ${priority.value} ${subject.options[subject.selectedIndex].text} ✅`;
+  li.style.background=subject.value;
+  li.style.color='#fff';
+  li.style.padding='6px';
+  li.style.borderRadius='6px';
+  li.style.margin='6px 0';
+  document.getElementById('scheduleList').appendChild(li);
+  document.getElementById('scheduleName').value='';
+  document.getElementById('scheduleMinutes').value='';
+}
+function showGoodJobGen(cb){
+  if(cb.checked){
+    document.getElementById('goodJobMessageGen').style.display='block';
+    cb.parentNode.remove();
+  }
+}
+function closeGoodJobGen(){document.getElementById('goodJobMessageGen').style.display='none';}
+
+// ASSIGNMENT TRACKER
+function addAssignment(){
+  const name=document.getElementById('assignmentName').value.trim();
+  const priority=document.getElementById('trackerPriority').value;
+  const date=document.getElementById('assignmentDate').value;
+  if(!name) return alert("Please enter assignment name!");
+  if(!date) return alert("Select due date!");
+  const li=document.createElement('li');
+  li.innerHTML=`<input type="checkbox" onclick="showGoodJobTracker(this)"> ${name} - ${priority} 📅 ${date} ✅`;
+  li.style.margin='6px 0';
+  document.getElementById('assignmentList').appendChild(li);
+  document.getElementById('assignmentName').value='';
+  document.getElementById('assignmentDate').value='';
+}
+function showGoodJobTracker(cb){
+  if(cb.checked){
+    document.getElementById('goodJobMessageTracker').style.display='block';
+    cb.parentNode.remove();
+  }
+}
+function closeGoodJobTracker(){document.getElementById('goodJobMessageTracker').style.display='none';}
+
+// TIMER
+let timerInterval;
+let timerSeconds=0;
+let isPaused=false;
+const persistentTimer=document.getElementById('persistentTimer');
+function startTimer(){
+  const work=parseInt(document.getElementById('workMinutes').value);
+  const brk=parseInt(document.getElementById('breakMinutes').value);
+  timerSeconds=work*60;
+  clearInterval(timerInterval);
+  isPaused=false;
+  persistentTimer.style.display='block';
+  timerInterval=setInterval(()=>{
+    if(!isPaused){
+      const mins=Math.floor(timerSeconds/60);
+      const secs=timerSeconds%60;
+      persistentTimer.textContent=`${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+      if(timerSeconds<=0){
+        clearInterval(timerInterval);
+        document.getElementById('alarmAudio').play();
+        alert("⏰ Time's up! Take a break for "+brk+" minutes.");
+      } else timerSeconds--;
+    }
+  },1000);
+}
+function pauseTimer(){isPaused=!isPaused;}
+function resetTimer(){clearInterval(timerInterval);timerSeconds=0; persistentTimer.style.display='none'; persistentTimer.textContent='00:00';}
+
+// ------------------ CAREER SELECTOR CODE (reworked + fixed) ------------------
+
+// Pages array used by showPage
+const pages = ['careerGridPage','careerDetailPage','surveyPage'];
+function showPage(id){
+  // hide homeScreen if showing a career page, otherwise show home if using index
+  pages.forEach(p=>document.getElementById(p).classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  // handle homeScreen visibility
+  if(id==='careerGridPage' || id==='careerDetailPage' || id==='surveyPage'){
+    document.getElementById('homeScreen').style.display='none';
+    backBtn.style.display='block';
+  }
+}
+
+// Career data (25 careers). Each has 5 stages: 0-childhood,1-middle,2-highschool,3-college/training,4-career/adulthood
+const careers = [
+  {name:"Doctor 🩺",stages:[
+    "👶 Childhood — Be curious: explore nature, read kids' science books, ask how the body works.",
+    "🏫 Middle School — Join science clubs, start basic volunteer activities (e.g., community health events).",
+    "🏫 High School — Take biology & chemistry, volunteer or shadow in clinics, maintain a strong GPA.",
+    "🎓 College/Training — Pre-med or biology major, research experience, strong MCAT and applications.",
+    "👨‍⚕️ Adulthood — Medical school, residency, board exams, then patient care and continuing education."
+  ]},
+  {name:"Software Engineer 💻",stages:[
+    "👶 Childhood — Play logic/puzzle games, tinker with simple kid-friendly coding toys.",
+    "🏫 Middle School — Try block-based coding, build small games or websites.",
+    "🏫 High School — Take computer science classes, start personal coding projects.",
+    "🎓 College/Training — CS degree or bootcamp, internships, contribute to open-source.",
+    "💼 Adulthood — Software jobs, continuous learning, specialize (backend/frontend/ML)."
+  ]},
+  {name:"Teacher 🍎",stages:[
+    "👶 Childhood — Practice explaining things to friends or siblings, love reading aloud.",
+    "🏫 Middle School — Join peer tutoring or after-school programs.",
+    "🏫 High School — Take education-related electives, volunteer mentoring younger students.",
+    "🎓 College/Training — Education degree, student teaching, classroom management practice.",
+    "🏫 Adulthood — Classroom teaching, continuing certification, curriculum development."
+  ]},
+  {name:"Architect 🏛️",stages:[
+    "👶 Childhood — Draw, build LEGO structures, learn to appreciate spaces.",
+    "🏫 Middle School — Take art and geometry classes, start sketching buildings.",
+    "🏫 High School — Focus on math and art, build design portfolio.",
+    "🎓 College/Training — Architecture degree, studio practice, internships at firms.",
+    "🏗️ Adulthood — Work as architect, licensing (ARE), design projects and client work."
+  ]},
+  {name:"Graphic Designer 🎨",stages:[
+    "👶 Childhood — Doodle, experiment with color and shapes.",
+    "🏫 Middle School — Learn basic drawing and layout, try digital tools.",
+    "🏫 High School — Take art/design classes, build a small portfolio.",
+    "🎓 College/Training — Graphic design or visual communication degree, internships.",
+    "💼 Adulthood — Freelance or studio work, specialize in branding, UX, or illustration."
+  ]},
+  {name:"Lawyer ⚖️",stages:[
+    "👶 Childhood — Read stories about fairness and debate simple topics.",
+    "🏫 Middle School — Join debate club, practice structured arguments.",
+    "🏫 High School — Advanced English, civics, mock trial, maintain strong grades.",
+    "🎓 College/Training — Pre-law or relevant major, law school, internships at firms.",
+    "🧑‍⚖️ Adulthood — Pass the bar, practice in a specialty: corporate, criminal, public interest."
+  ]},
+  {name:"Entrepreneur 💼",stages:[
+    "👶 Childhood — Start small ventures (lemonade stand), learn basic money sense.",
+    "🏫 Middle School — Join business clubs, sell crafts or services.",
+    "🏫 High School — Take economics, start a small business or startup idea.",
+    "🎓 College/Training — Business courses, internships, learn finance & marketing.",
+    "🚀 Adulthood — Launch startups, learn to pitch, scale, iterate based on customers."
+  ]},
+  {name:"Pilot ✈️",stages:[
+    "👶 Childhood — Love planes, learn basic aeronautics from books/toys.",
+    "🏫 Middle School — Learn math and physics fundamentals.",
+    "🏫 High School — Advanced math & science, join flight-sim clubs.",
+    "🎓 College/Training — Flight school, earn private/commercial licenses and flight hours.",
+    "✈️ Adulthood — Accumulate hours, airline training, recurrent checks, career advancement."
+  ]},
+  {name:"Chef 👩‍🍳",stages:[
+    "👶 Childhood — Cook simple meals with family, taste and learn ingredients.",
+    "🏫 Middle School — Take home-ec or cooking classes, help at events.",
+    "🏫 High School — Work or intern in kitchens, refine knife skills.",
+    "🎓 College/Training — Culinary school or apprenticeship, competitions.",
+    "🍽️ Adulthood — Work in restaurants, develop signature dishes, eventually lead or open a restaurant."
+  ]},
+  {name:"Musician 🎵",stages:[
+    "👶 Childhood — Learn an instrument, sing, play with rhythm games.",
+    "🏫 Middle School — Join school band/choir, practice regularly.",
+    "🏫 High School — Perform in ensembles, write songs, record demos.",
+    "🎓 College/Training — Music school or intensive private study, gigs and networking.",
+    "🎤 Adulthood — Record, perform live, collaborate, manage distribution and touring."
+  ]},
+  {name:"Journalist 📰",stages:[
+    "👶 Childhood — Read newspapers & curious about current events.",
+    "🏫 Middle School — Start a small blog or school newsletter.",
+    "🏫 High School — Write for school paper, learn interviewing skills.",
+    "🎓 College/Training — Journalism/communications degree, internships at newsrooms.",
+    "🗞️ Adulthood — Reporting, investigating, multimedia storytelling and editorial work."
+  ]},
+  {name:"Mechanical Engineer ⚙️",stages:[
+    "👶 Childhood — Build with kits, take things apart to see how they work.",
+    "🏫 Middle School — Join robotics or maker clubs.",
+    "🏫 High School — Focus on math and physics, build projects.",
+    "🎓 College/Training — Engineering degree, internships, CAD and lab experience.",
+    "🏭 Adulthood — Work in R&D, manufacturing, design and systems engineering."
+  ]},
+  {name:"Astronaut 🚀",stages:[
+    "👶 Childhood — Love space books, stargaze and build rockets from kits.",
+    "🏫 Middle School — Strong math & science foundation, join space camps.",
+    "🏫 High School — Advanced STEM classes, physical fitness and leadership.",
+    "🎓 College/Training — Aerospace or related degree, flight/test experience, advanced training.",
+    "🚀 Adulthood — Astronaut selection, mission training, research and spaceflight operations."
+  ]},
+  {name:"Nurse 🩹",stages:[
+    "👶 Childhood — Show empathy, help family members, enjoy caring roles.",
+    "🏫 Middle School — Volunteer at community centers, health fairs.",
+    "🏫 High School — Take biology, health classes, CNA or volunteer work.",
+    "🎓 College/Training — Nursing program (ADN/BSN), clinical rotations, NCLEX exam.",
+    "🏥 Adulthood — Work in hospitals/clinics, specialize (ICU, pediatric, etc.), ongoing certifications."
+  ]},
+  {name:"Data Scientist 📊",stages:[
+    "👶 Childhood — Enjoy puzzles, logic games, and basic statistics games.",
+    "🏫 Middle School — Learn math fundamentals and early coding.",
+    "🏫 High School — Take AP statistics, computer science, build data projects.",
+    "🎓 College/Training — Degrees in statistics, CS, or data science; internships.",
+    "💻 Adulthood — Work with datasets, modeling, ML, and visualization to answer business/scientific questions."
+  ]},
+  {name:"Psychologist 🧠",stages:[
+    "👶 Childhood — Be observant about behavior and emotions, ask why people act a certain way.",
+    "🏫 Middle School — Read about human behavior, join peer counseling programs.",
+    "🏫 High School — Psychology electives, volunteer in counseling centers.",
+    "🎓 College/Training — Psychology degree, research assistant roles, advanced degrees for clinical practice.",
+    "🧑‍⚕️ Adulthood — Clinical practice or research, licensure, specialized therapy techniques."
+  ]},
+  {name:"Actor 🎭",stages:[
+    "👶 Childhood — Enjoy theatrics, role play, and storytelling.",
+    "🏫 Middle School — Join plays, drama clubs, practice improvisation.",
+    "🏫 High School — Acting classes, build showreel, local performances.",
+    "🎓 College/Training — Conservatory or acting programs, workshops, networking.",
+    "🎬 Adulthood — Auditioning, performing in theatre/TV/film, agent relationships and ongoing training."
+  ]},
+  {name:"Photographer 📸",stages:[
+    "👶 Childhood — Take photos with any camera, study light and composition.",
+    "🏫 Middle School — Learn basic editing, join yearbook or photo clubs.",
+    "🏫 High School — Build a portfolio and shoot for school events.",
+    "🎓 College/Training — Photography courses, internships, second-shooter gigs.",
+    "📷 Adulthood — Freelance/studio work, specialize (weddings, portrait, commercial), market your portfolio."
+  ]},
+  {name:"Writer ✍️",stages:[
+    "👶 Childhood — Keep a journal, invent stories, read widely.",
+    "🏫 Middle School — Join writing clubs, submit to school publications.",
+    "🏫 High School — Advanced literature and creative writing, start a blog.",
+    "🎓 College/Training — Degree in writing/literature or workshops, internships with publishers.",
+    "📚 Adulthood — Freelance, publish fiction/nonfiction, editing, and build a readership."
+  ]},
+  {name:"Athlete 🏅",stages:[
+    "👶 Childhood — Play sports, develop coordination and love of competition.",
+    "🏫 Middle School — Join organized teams, skill training and conditioning.",
+    "🏫 High School — Compete at high levels, strength & nutrition programs.",
+    "🎓 College/Training — Play varsity sports or pro development programs.",
+    "🏆 Adulthood — Pro or semi-pro career, coaching, sports science support, endorsements."
+  ]},
+  {name:"Research Scientist 🔬",stages:[
+    "👶 Childhood — Curious experiments at home, read science magazines.",
+    "🏫 Middle School — Science fairs, lab clubs, coding basics.",
+    "🏫 High School — Advanced STEM coursework, research projects.",
+    "🎓 College/Training — Degree in a scientific field, lab internships, graduate studies.",
+    "🔬 Adulthood — Publish research, lead labs, secure grants and mentor students."
+  ]},
+  {name:"Product Manager 📦",stages:[
+    "👶 Childhood — Organize small projects, mix creativity and planning.",
+    "🏫 Middle School — Lead group projects, learn to prioritize tasks.",
+    "🏫 High School — Take business/tech classes, build simple products or apps.",
+    "🎓 College/Training — Business/CS degrees or cross-functional internships.",
+    "🚀 Adulthood — Work at tech/product companies, coordinate teams, measure outcomes and roadmap strategy."
+  ]},
+  {name:"UX Designer 🖥️",stages:[
+    "👶 Childhood — Notice how products feel, sketch interfaces or apps.",
+    "🏫 Middle School — Learn design basics, use simple prototyping tools.",
+    "🏫 High School — Build a small design portfolio and take art/tech classes.",
+    "🎓 College/Training — UX/UI courses, internships, user research experience.",
+    "💡 Adulthood — Work on product teams designing user experiences, conduct testing and iterate."
+  ]},
+  {name:"Electrician 🔌",stages:[
+    "👶 Childhood — Like fixing things and learning how circuits work.",
+    "🏫 Middle School — Take shop/technology classes and learn safety basics.",
+    "🏫 High School — Vocational classes, apprenticeship inquiries, hands-on learning.",
+    "🎓 College/Training — Apprenticeship, on-the-job training, certification/licensing.",
+    "🔧 Adulthood — Residential/commercial electrical work, specialization, and master electrician license."
+  ]},
+  {name:"Environmental Scientist 🌿",stages:[
+    "👶 Childhood — Explore outdoors, learn about ecosystems and conservation.",
+    "🏫 Middle School — Join ecology clubs, collect local data for projects.",
+    "🏫 High School — Focus on biology, chemistry, and environmental electives.",
+    "🎓 College/Training — Environmental science or ecology degree, fieldwork and internships.",
+    "🌍 Adulthood — Environmental monitoring, policy advising, conservation projects, and research."
+  ]}
+];
+
+// --- Survey Questions (30) ---
+const surveyQuestions = [
+  {q:"Do you enjoy working with people directly, such as patients, students, or clients?",options:["Yes, very much","Sometimes","Prefer minimal interaction","Not at all"]},
+  {q:"Do you enjoy solving complex problems that require critical thinking?",options:["Yes, love it","Sometimes","Only simple ones","Not really"]},
+  {q:"Are you comfortable with public speaking and presenting ideas to groups?",options:["Very comfortable","Somewhat comfortable","A little nervous","Not at all"]},
+  {q:"Do you enjoy expressing yourself creatively through art, music, or writing?",options:["Yes, often","Sometimes","Rarely","Not at all"]},
+  {q:"Do you prefer working outdoors, indoors, or a mix of both?",options:["Outdoors","Indoors","Both equally","Depends on situation"]},
+  {q:"Do you enjoy helping and caring for others, especially in stressful situations?",options:["Yes, it motivates me","Sometimes","Not really","No"]},
+  {q:"Are you deeply interested in science, technology, engineering, or math fields?",options:["Yes, passionate","Somewhat interested","A little","Not at all"]},
+  {q:"Do you prefer structured routines or flexible schedules?",options:["Strict routines","Mostly structured","Flexible","Completely free-flowing"]},
+  {q:"Do you enjoy taking leadership roles in projects or group work?",options:["Yes, always","Sometimes","Occasionally","No, prefer supporting"]},
+  {q:"Do you like analyzing data, numbers, and statistics to find patterns?",options:["Love it","Somewhat","Rarely","Not at all"]},
+  {q:"Are you comfortable taking risks and making bold decisions?",options:["Yes, very comfortable","Somewhat","Cautious","Avoid risks"]},
+  {q:"Do you enjoy teaching, mentoring, or guiding others to learn?",options:["Yes, love teaching","Sometimes","Not much","No"]},
+  {q:"How detail-oriented are you when completing assignments or tasks?",options:["Extremely detail-oriented","Moderately","Slightly","Not at all"]},
+  {q:"Do you enjoy writing, journaling, or storytelling?",options:["Yes, very much","Sometimes","Rarely","No"]},
+  {q:"Do you enjoy performing arts such as acting, dance, or music?",options:["Yes, often","Sometimes","Rarely","Not at all"]},
+  {q:"Do you thrive under pressure when solving urgent problems?",options:["Yes, I do best under pressure","Sometimes","Not really","I avoid pressure situations"]},
+  {q:"Do you prefer working in teams or independently?",options:["Teams","Independently","Depends on task","Flexible either way"]},
+  {q:"Are you interested in law, justice, or debating important issues?",options:["Yes, very interested","Somewhat","Little","Not at all"]},
+  {q:"Do you enjoy physical activity, sports, or staying highly active in work?",options:["Yes, very active","Sometimes","Not much","Not at all"]},
+  {q:"Do you enjoy experimenting, testing, and discovering new things?",options:["Yes, I love exploring","Sometimes","Not much","No"]},
+  {q:"Would you like a career where you travel often or see new places?",options:["Yes, I’d love that","Sometimes","Occasionally","No, prefer staying local"]},
+  {q:"Are you comfortable using computers and learning new tech quickly?",options:["Yes, very comfortable","Somewhat","A little","No"]},
+  {q:"Are you motivated by financial rewards or stability in your career?",options:["Strongly motivated","Somewhat","Not really","No, passion matters more"]},
+  {q:"Do you enjoy researching, reading, and constantly learning new information?",options:["Yes, very much","Sometimes","Not much","Not at all"]},
+  {q:"Do you enjoy cooking, preparing food, or experimenting with recipes?",options:["Yes, love cooking","Sometimes","Rarely","Not at all"]},
+  {q:"Do you feel motivated by competition and achieving top results?",options:["Yes, very motivated","Somewhat","Not much","No"]},
+  {q:"Do you enjoy taking photographs, making videos, or creating media content?",options:["Yes, love it","Sometimes","Rarely","Not at all"]},
+  {q:"Would you prefer a career that impacts society directly, such as healthcare, education, or public service?",options:["Yes, strongly","Somewhat","Not really","No"]},
+  {q:"Do you like hands-on work, such as building, fixing, or creating physical objects?",options:["Yes, love hands-on work","Sometimes","Rarely","Not at all"]},
+  {q:"Do you prefer jobs with clear daily tasks or ones with open-ended creativity?",options:["Clear structured tasks","Somewhat structured","Creative flexibility","Completely open-ended"]}
+];
+
+// Map each survey question's options to one or more cluster tags (simple heuristic)
+const questionClusters = [
+  /*1*/ [["health"],["education"],["tech"],["tech"]],
+  /*2*/ [["engineering"],["data"],["education"],["creative"]],
+  /*3*/ [["education"],["business"],["creative"],["tech"]],
+  /*4*/ [["creative"],["creative"],["tech"],["business"]],
+  /*5*/ [["science"],["tech"],["creative"],["business"]],
+  /*6*/ [["health"],["education"],["business"],["tech"]],
+  /*7*/ [["tech"],["engineering"],["science"],["creative"]],
+  /*8*/ [["engineering"],["business"],["creative"],["creative"]],
+  /*9*/ [["business"],["entrepreneurship"],["education"],["tech"]],
+  /*10*/ [["data"],["engineering"],["business"],["creative"]],
+  /*11*/ [["entrepreneurship"],["business"],["engineering"],["education"]],
+  /*12*/ [["education"],["education"],["creative"],["tech"]],
+  /*13*/ [["engineering"],["data"],["creative"],["entrepreneurship"]],
+  /*14*/ [["media"],["creative"],["education"],["tech"]],
+  /*15*/ [["arts"],["arts"],["creative"],["education"]],
+  /*16*/ [["health"],["business"],["sports"],["education"]],
+  /*17*/ [["business"],["creative"],["education"],["entrepreneurship"]],
+  /*18*/ [["law"],["public_service"],["business"],["creative"]],
+  /*19*/ [["sports"],["sports"],["creative"],["tech"]],
+  /*20*/ [["science"],["research"],["tech"],["creative"]],
+  /*21*/ [["aviation"],["business"],["education"],["creative"]],
+  /*22*/ [["tech"],["tech"],["creative"],["education"]],
+  /*23*/ [["business"],["business"],["creative"],["education"]],
+  /*24*/ [["science"],["education"],["research"],["creative"]],
+  /*25*/ [["culinary"],["culinary"],["creative"],["tech"]],
+  /*26*/ [["sports"],["business"],["creative"],["education"]],
+  /*27*/ [["media"],["creative"],["tech"],["education"]],
+  /*28*/ [["public_service"],["public_service"],["business"],["creative"]],
+  /*29*/ [["trades"],["engineering"],["creative"],["tech"]],
+  /*30*/ [["engineering"],["business"],["creative"],["entrepreneurship"]]
+];
+
+// cluster -> list of career indices (first match used as the recommended career)
+const clustersToCareers = {
+  health: [0,13,15],
+  tech: [1,14,21,22],
+  education: [2],
+  design: [3,4,22],
+  law: [5],
+  entrepreneurship: [6,21],
+  aviation: [7,12],
+  culinary: [8],
+  arts: [9,16],
+  media: [10,17,18],
+  engineering: [11,23],
+  science: [20,24],
+  sports: [19],
+  data: [14],
+  public_service: [5,2],
+  research: [20],
+  trades: [23],
+  creative: [4,9,16,18,17,22],
+};
+
+// --- Elements ---
+const careerGridInner = document.getElementById('careerGridInner');
+const careerTitle = document.getElementById('careerTitle');
+const careerDescription = document.getElementById('careerDescription');
+const timelineSlider = document.getElementById('timelineSlider');
+const careerBackBtnLocal = document.getElementById('careerBackBtn');
+const viewSurveyBtn = document.getElementById('viewSurveyBtn');
+const openHomeBtn = document.getElementById('openHomeBtn');
+
+const careersTabBtn = document.getElementById('careersTabBtn');
+const surveyTabBtn = document.getElementById('surveyTabBtn');
+
+const surveyQuestionContainer = document.getElementById('surveyQuestionContainer');
+const surveyOptionsContainer = document.getElementById('surveyOptionsContainer');
+const progressBar = document.getElementById('progressBar');
+const surveyResult = document.getElementById('surveyResult');
+
+const surveyBackBtn = document.getElementById('surveyBackBtn');
+
+// State
+let currentCareerIndex = 0;
+let currentQuestionIndex = 0;
+let selectedAnswers = []; // stores indices of chosen options
+let clusterScores = {}; // tally clusters during survey
+
+// initialize clusterScores
+function resetClusterScores(){ clusterScores = {}; Object.keys(clustersToCareers).forEach(k=>clusterScores[k]=0); }
+
+// --- Build career grid (25 cards) ---
+const colorPalette = ['#0077b6','#00b4d8','#8e44ad','#f39c12','#27ae60','#f16b6f','#6a4c93'];
+careers.forEach((c,i)=>{
+  const card = document.createElement('div');
+  card.className = 'careerCard';
+  card.style.background = colorPalette[i % colorPalette.length];
+  card.innerHTML = `<p>${c.name}</p>`;
+  card.onclick = ()=> openCareer(i);
+  careerGridInner.appendChild(card);
+});
+
+// --- Click handlers for Home circle and Career circle ---
+document.querySelector('.circle.career').addEventListener('click', ()=>{
+  // Show career selector main grid
+  showPage('careerGridPage');
+  careersTabBtn.className='tab active';
+  surveyTabBtn.className='tab inactive';
+});
+
+// tabs inside career selector
+careersTabBtn.addEventListener('click', ()=>{
+  showPage('careerGridPage');
+  careersTabBtn.className='tab active';
+  surveyTabBtn.className='tab inactive';
+});
+surveyTabBtn.addEventListener('click', ()=>{
+  startSurvey();
+  showPage('surveyPage');
+  careersTabBtn.className='tab inactive';
+  surveyTabBtn.className='tab active';
+});
+
+// --- Open a career detail ---
+function openCareer(i){
+  currentCareerIndex = i;
+  showPage('careerDetailPage');
+  renderCareerDetail(i);
+}
+
+// render detail
+function renderCareerDetail(i){
+  const c = careers[i];
+  careerTitle.innerText = c.name;
+  careerDescription.innerText = c.stages[0];
+  document.getElementById('careerStageEmoji').innerText = stageEmoji(0);
+  timelineSlider.value = 0;
+  updateStageLabel(0);
+}
+
+// helper for emoji per stage
+function stageEmoji(stageIndex){
+  const emojis = ['👶','🏫','📚','🎓','💼'];
+  return emojis[stageIndex] || '';
+}
+
+// timeline slider interaction
+timelineSlider.addEventListener('input', ()=>{
+  const i = parseInt(timelineSlider.value);
+  careerDescription.innerText = careers[currentCareerIndex].stages[i];
+  document.getElementById('careerStageEmoji').innerText = stageEmoji(i);
+  updateStageLabel(i);
+});
+
+function updateStageLabel(i){
+  const labels = ["Childhood","Middle School","High School","College/Training","Adulthood/Career"];
+  document.getElementById('stageLabel').innerHTML = `<strong>${labels[i]}</strong><br>${careers[currentCareerIndex].stages[i]}`;
+}
+
+// back buttons
+careerBackBtnLocal.addEventListener('click', ()=>{
+  showPage('careerGridPage');
+});
+surveyBackBtn.addEventListener('click', ()=>{
+  showPage('careerGridPage');
+});
+
+// open survey from career detail
+viewSurveyBtn.addEventListener('click', ()=>{
+  startSurvey();
+  showPage('surveyPage');
+});
+
+// open home button
+openHomeBtn.addEventListener('click', ()=>{
+  document.getElementById('homeScreen').style.display='flex';
+  // hide career pages
+  pages.forEach(p=>document.getElementById(p).classList.remove('active'));
+  backBtn.style.display='none';
+});
+
+// --- SURVEY LOGIC ---
+
+function startSurvey(){
+  currentQuestionIndex = 0;
+  selectedAnswers = [];
+  resetClusterScores();
+  surveyResult.innerHTML = '';
+  progressBar.style.width = '0%';
+  showQuestion();
+}
+
+function showQuestion(){
+  const q = surveyQuestions[currentQuestionIndex];
+  surveyQuestionContainer.innerText = `${currentQuestionIndex+1}. ${q.q}`;
+  surveyOptionsContainer.innerHTML = '';
+  q.options.forEach((opt, idx)=>{
+    const btn = document.createElement('button');
+    btn.className = 'btn-secondary';
+    btn.style.textAlign='left';
+    btn.innerText = opt;
+    btn.onclick = ()=> { chooseAnswer(idx); };
+    surveyOptionsContainer.appendChild(btn);
+  });
+  progressBar.style.width = (currentQuestionIndex / surveyQuestions.length * 100) + "%";
+}
+
+function chooseAnswer(optionIndex){
+  // record answer
+  selectedAnswers[currentQuestionIndex] = optionIndex;
+  // award cluster points
+  const clustersForThisOption = questionClusters[currentQuestionIndex][optionIndex] || [];
+  if(Array.isArray(clustersForThisOption)){
+    clustersForThisOption.forEach(cl => {
+      if(!clusterScores[cl]) clusterScores[cl]=0;
+      clusterScores[cl] += 1;
+    });
+  } else if(typeof clustersForThisOption === 'string'){
+    if(!clusterScores[clustersForThisOption]) clusterScores[clustersForThisOption]=0;
+    clusterScores[clustersForThisOption] += 1;
+  }
+  // next question or finish
+  currentQuestionIndex++;
+  if(currentQuestionIndex < surveyQuestions.length){
+    showQuestion();
+  } else {
+    finishSurvey();
+  }
+}
+
+function finishSurvey(){
+  progressBar.style.width = "100%";
+  surveyQuestionContainer.innerText = "✅ Survey Completed!";
+  surveyOptionsContainer.innerHTML = '';
+  // compute best cluster
+  let bestCluster = null;
+  let bestScore = -1;
+  Object.entries(clusterScores).forEach(([cluster,score])=>{
+    if(score > bestScore){ bestScore = score; bestCluster = cluster; }
+  });
+  if(!bestCluster){
+    surveyResult.innerHTML = `<div class="card"><strong>Result:</strong> We couldn't determine a strong match — try the survey again.</div>`;
+    return;
+  }
+  const possibleCareers = clustersToCareers[bestCluster] || [];
+  let recommendedCareerIndex = possibleCareers.length ? possibleCareers[0] : 0;
+  const career = careers[recommendedCareerIndex];
+  // build explanation
+  let explanation = `<div class="card"><h3>Suggested path: ${career.name}</h3>`;
+  explanation += `<p><strong>Why this match?</strong> Your answers showed interest in <em>${bestCluster}</em>-type tasks (score ${bestScore}).</p>`;
+  explanation += `<p><strong>Roadmap (high level):</strong></p><ul>`;
+  career.stages.forEach(s => explanation += `<li>${s}</li>`);
+  explanation += `</ul>`;
+  explanation += `<div style="margin-top:8px;"><button class="btn-primary" id="viewCareerFromSurveyBtn">View detailed roadmap</button></div>`;
+  explanation += `</div>`;
+  surveyResult.innerHTML = explanation;
+
+  // attach click: view career detail
+  document.getElementById('viewCareerFromSurveyBtn').addEventListener('click', ()=>{
+    openCareer(recommendedCareerIndex);
+  });
+}
+// ------------------ end career selector code ------------------
+// Show Home
+function showHome() {
+  document.getElementById("homeScreen").classList.remove("hidden");
+  document.getElementById("journalSection").classList.add("hidden");
+}
+
+// Open Journal when clicking circle
+document.getElementById("journalCircle").addEventListener("click", () => {
+  document.getElementById("homeScreen").classList.add("hidden");
+  document.getElementById("journalSection").classList.remove("hidden");
+});
+
+// Save Journal Entry
+document.getElementById("saveJournalBtn").addEventListener("click", () => {
+  let text = document.getElementById("journalInput").value.trim();
+  if (text) {
+    saveEntry(text);
+    document.getElementById("journalInput").value = "";
+  }
+});
+
+// Store entries
+function saveEntry(text) {
+  let archive = JSON.parse(localStorage.getItem("journalArchive")) || [];
+  let timestamp = new Date().toLocaleString();
+  archive.push({ text, timestamp });
+  localStorage.setItem("journalArchive", JSON.stringify(archive));
+  renderArchive();
+}
+
+// Render Archive
+function renderArchive() {
+  let archive = JSON.parse(localStorage.getItem("journalArchive")) || [];
+  let list = document.getElementById("journalArchive");
+  list.innerHTML = "";
+  archive.forEach((entry, index) => {
+    let li = document.createElement("li");
+    li.innerHTML = `<span>${entry.timestamp}: ${entry.text}</span>
+      <button onclick="deleteEntry(${index})">🗑️ Delete</button>`;
+    list.appendChild(li);
+  });
+}
+
+// Delete entry
+function deleteEntry(index) {
+  let archive = JSON.parse(localStorage.getItem("journalArchive")) || [];
+  archive.splice(index, 1);
+  localStorage.setItem("journalArchive", JSON.stringify(archive));
+  renderArchive();
+}
+
+// Reset daily
+setInterval(() => {
+  document.getElementById("journalInput").value = "";
+}, 86400000);
+
+// Voice dictation
+const voiceBtn = document.getElementById("voiceBtn");
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SpeechRecognition) {
+  const recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.lang = "en-US";
+
+  voiceBtn.addEventListener("click", () => {
+    recognition.start();
+  });
+
+  recognition.onresult = (event) => {
+    document.getElementById("journalInput").value += " " + event.results[0][0].transcript;
+  };
+}
+
+// Music mute
+let music = new Audio("background-music.mp3"); // replace with your file
+music.loop = true;
+music.play();
+
+document.getElementById("muteBtn").addEventListener("click", () => {
+  if (music.muted) {
+    music.muted = false;
+    document.getElementById("muteBtn").innerText = "🔈 Mute";
+  } else {
+    music.muted = true;
+    document.getElementById("muteBtn").innerText = "🔇 Unmute";
+  }
+});
+
+renderArchive(); // Load archive
+
+
+</script>
+
+</body>
+</html>
+
+

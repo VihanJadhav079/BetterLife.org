@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Financial Organization Advisor</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --bg:#f4f7fb; --card:#ffffff; --text:#0f172a; --muted:#475569; --accent:#2563eb;
+  --accent-2:#1d4ed8; --border:#e2e8f0; --shadow:0 10px 30px rgba(2,6,23,.12);
+}
+html,body{height:100%;margin:0;font:16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;}
+body{background:var(--bg);color:var(--text);position:relative;}
+
+/* Top Buttons */
+.top-btn{
+  position:fixed;
+  top:20px;
+  z-index:1100;
+  padding:10px 20px;
+  border:none;
+  border-radius:8px;
+  background:var(--accent);
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+.top-btn:hover{background:var(--accent-2);}
+#homeBtn{left:20px;}
+#backMainBtn{right:80px; display:none;}
+#playMuteBtn{right:20px;}
+
+/* Front Page */
+.front-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 50px;
+  height: 100vh;
+}
+.front-page h1{
+  font-size:48px;
+  font-weight:800;
+  color:var(--text);
+  text-align:center;
+}
+.circle-container{
+  display:flex;
+  gap:50px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+.circle-btn {
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: transform .2s, background .2s;
+}
+.circle-btn:hover {
+  transform: scale(1.08);
+  background: var(--accent-2);
+}
+
+/* Survey Modal */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:1000}
+.hidden{display:none}
+.card{width:min(900px,100%);background:var(--card);border-radius:16px;box-shadow:0 10px 30px rgba(2,6,23,.12);overflow:hidden}
+.header{display:flex;gap:12px;padding:20px 24px;border-bottom:1px solid var(--border);align-items:center}
+.pill{display:inline-flex;align-items:center;gap:8px;background:#e2f2ff;color:#0b3b8c;padding:8px 14px;border-radius:999px;font-weight:600}
+.title{font-size:clamp(20px,2.4vw,28px);font-weight:800;letter-spacing:.2px;margin:0}
+.sub{color:var(--muted);font-size:14px;margin-top:4px}
+.content{padding:24px}
+.q-label{font-size:18px;font-weight:700;margin:0 0 10px}
+.progress-wrap{display:flex;align-items:center;gap:12px;margin:4px 0 18px}
+.progress{height:10px;background:#e5eaf3;border-radius:999px;flex:1;overflow:hidden}
+.bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent), var(--accent-2));transition:width .35s ease}
+.count{font-weight:700;color:var(--muted);white-space:nowrap}
+.actions{display:flex;justify-content:space-between;align-items:center;margin-top:22px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:#fff;padding:12px 16px;border-radius:12px;font-weight:700;cursor:pointer}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-2)}
+.footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
+.tip{font-size:12px;color:var(--muted)}
+.option-btn{display:block;width:100%;padding:14px;margin:6px 0;background:#f8fafc;border:1px solid var(--border);border-radius:12px;cursor:pointer;text-align:left;font-weight:600;font-size:16px}
+.option-btn:hover{background:#eff6ff;border-color:var(--accent)}
+.option-btn.active{border-color:var(--accent);box-shadow:0 0 0 4px rgba(37,99,235,.12);background:#f0f7ff}
+.currency{position:relative;max-width:600px}
+.currency span{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#64748b;font-weight:700}
+.currency input{padding:18px 18px 18px 36px;width:100%;font-size:18px;border:1px solid var(--border);border-radius:20px;outline:none;background:#fbfdff}
+.currency input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(37,99,235,.15)}
+
+/* Calculator + Chart */
+main{padding:24px;display:none;padding-top:80px;}
+h4{margin:0 0 8px}
+input[type="number"]{border-radius:10px;padding:8px;border:2px solid #ccc;width:200px}
+.slider{width:200px}
+.range-value{font-weight:700;margin-left:10px}
+#result{margin-top:12px;font-size:18px;font-weight:700;color:#333}
+button.calc{margin-top:16px;padding:10px 20px;border-radius:8px;border:none;background:#4CAF50;color:#fff;font-size:16px;cursor:pointer}
+#chartContainer{margin-top:20px;max-width:900px;}
+</style>
+</head>
+<body>
+
+<button id="homeBtn" class="top-btn">🏠 Home</button>
+<button id="backMainBtn" class="top-btn">Back</button>
+<button id="playMuteBtn" class="top-btn">🔊</button>
+
+<div class="front-page" id="frontPage">
+  <h1>Financial Organization Advisor</h1>
+  <div class="circle-container">
+    <div class="circle-btn" id="toolsBtn">Financial Tools</div>
+    <div class="circle-btn" id="surveyBtn">Financial Survey</div>
+  </div>
+</div>
+
+<div id="surveyModal" class="overlay hidden">
+  <div class="card">
+    <div class="header">
+      <div class="pill">📈 Survey</div>
+      <div>
+        <h1 class="title">Financial Planning Survey (4 items)</h1>
+        <div class="sub">Answer each question. Your inputs will auto-configure the calculator.</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="progress-wrap">
+        <div class="progress"><div id="progressBar" class="bar"></div></div>
+        <div id="progressCount" class="count">Question 1 of 4</div>
+      </div>
+      <form id="surveyForm">
+        <div id="questionHost"></div>
+        <div class="actions">
+          <button type="button" id="backBtn" class="btn">◀ Back</button>
+          <button type="button" id="nextBtn" class="btn primary">Next ▶</button>
+        </div>
+      </form>
+    </div>
+    <div class="footer">
+      <div class="tip">Your answers are kept on this page only.</div>
+    </div>
+  </div>
+</div>
+
+<main id="calculatorMain">
+  <div>
+    <table class="nostyle">
+      <tr><td><label for="initialInvestment"><h4>Initial Investment</h4></label></td></tr>
+      <tr><td><input type="number" id="initialInvestment" /></td></tr>
+      <tr><td><br/><label for="contribution"><h4>Contributions</h4></label></td></tr>
+      <tr><td><input type="number" id="contribution" /></td></tr>
+      <tr>
+        <td><br/>
+          <input type="radio" id="daily" name="contributions" value="daily">
+          <label for="daily">Daily</label>
+          <input type="radio" id="weekly" name="contributions" value="weekly">
+          <label for="weekly">Weekly</label><br>
+          <input type="radio" id="monthly" name="contributions" value="monthly" checked>
+          <label for="monthly">Monthly</label>
+          <input type="radio" id="annual" name="contributions" value="annual">
+          <label for="annual">Annual</label>
+        </td>
+      </tr>
+      <tr>
+        <td><br/>
+          <h4>Years To Grow</h4>
+          <div>
+            <input type="range" min="1" max="50" value="25" class="slider" id="yearsSlider"
+                   oninput="document.getElementById('yearsValue').innerText = this.value">
+            <span class="range-value" id="yearsValue">25</span>
+          </div>
+        </td>
+      </tr>
+      <tr><td><br/><label for="annualReturn"><h4>Average Annual Return (%)</h4></label></td></tr>
+      <tr><td><input type="number" id="annualReturn" /></td></tr>
+    </table>
+    <button class="calc" onclick="calculateCompound()">Calculate</button>
+    <div id="result"></div>
+    <div id="chartContainer">
+      <canvas id="growthChart"></canvas>
+    </div>
+  </div>
+</main>
+
+<script>
+// Elements
+const frontPage=document.getElementById('frontPage');
+const surveyModal=document.getElementById('surveyModal');
+const calculatorMain=document.getElementById('calculatorMain');
+const toolsBtn=document.getElementById('toolsBtn');
+const surveyBtn=document.getElementById('surveyBtn');
+const backMainBtn=document.getElementById('backMainBtn');
+const homeBtn=document.getElementById('homeBtn');
+const playMuteBtn=document.getElementById('playMuteBtn');
+
+// Top Buttons
+homeBtn.onclick = ()=>window.location.href="index.html";
+backMainBtn.onclick = ()=>{
+  frontPage.style.display='flex';
+  calculatorMain.style.display='none';
+  surveyModal.classList.add('hidden');
+  backMainBtn.style.display='none';
+};
+
+// Playlist
+const audioFiles = [
+  '/background-music-soft-calm-333111.mp3',
+  '/birds_of_passage.mp3',
+  '/calm-soft-background-music-398280.mp3',
+  '/calm-soft-background-music-400912.mp3',
+  '/please-calm-my-mind-125566.mp3',
+  '/sonder.mp3',
+  '/sunset_landscape.mp3'
+];
+
+let currentAudioIndex = 0;
+let audio = new Audio(audioFiles[currentAudioIndex]);
+let isPlaying = false;
+
+// Move to next track automatically
+audio.addEventListener('ended', () => {
+  currentAudioIndex = (currentAudioIndex + 1) % audioFiles.length;
+  audio.src = audioFiles[currentAudioIndex];
+  if (isPlaying) audio.play();
+});
+
+// Play / Mute toggle
+playMuteBtn.onclick = () => {
+  if (!isPlaying) {
+    isPlaying = true;
+    audio.play();
+    playMuteBtn.textContent = '🔊'; // playing
+  } else {
+    isPlaying = false;
+    audio.pause();
+    playMuteBtn.textContent = '🔇'; // muted
+  }
+};
+
+
+// Navigation
+toolsBtn.onclick=()=>{ frontPage.style.display='none'; calculatorMain.style.display='block'; backMainBtn.style.display='block';};
+surveyBtn.onclick=()=>{ frontPage.style.display='none'; surveyModal.classList.remove('hidden'); backMainBtn.style.display='block'; idx=0; renderSurvey(); };
+
+// Calculator
+let chart;
+function calculateCompound(){
+  const P=parseFloat(document.getElementById("initialInvestment").value)||0;
+  const contrib=parseFloat(document.getElementById("contribution").value)||0;
+  const rate=parseFloat(document.getElementById("annualReturn").value)/100||0;
+  const years=parseInt(document.getElementById("yearsSlider").value)||25;
+  const freq=document.querySelector('input[name="contributions"]:checked').value;
+  const n=freq==="daily"?365:freq==="weekly"?52:freq==="monthly"?12:1;
+  let investment=P,totalInvested=P;
+  const labels=[], investedData=[], returnsData=[];
+  const startYear=new Date().getFullYear();
+  for(let year=1;year<=years;year++){
+    for(let i=0;i<n;i++){investment*=(1+rate/n); investment+=contrib; totalInvested+=contrib;}
+    labels.push(String(startYear+year));
+    investedData.push(totalInvested);
+    returnsData.push(investment-totalInvested);
+  }
+  document.getElementById("result").innerText=`Future Value: $${investment.toFixed(2)}`;
+  if(chart) chart.destroy();
+  const ctx=document.getElementById('growthChart').getContext('2d');
+  chart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Investment',data:investedData,backgroundColor:'#B5E48C'},{label:'Return',data:returnsData,backgroundColor:'#1D9C59'}]},options:{responsive:true,plugins:{legend:{position:'top'},title:{display:true,text:'Potential Future Balance Over Time',font:{size:18}}},scales:{y:{beginAtZero:true,ticks:{callback:v=>`$${Number(v).toLocaleString()}`}}}}});
+}
+
+// Survey
+const host=document.getElementById('questionHost');
+const nextBtn=document.getElementById('nextBtn');
+const backBtn=document.getElementById('backBtn');
+const progressBar=document.getElementById('progressBar');
+const progressCount=document.getElementById('progressCount');
+let idx=0;
+const answers={ ambition:null, cost:null, income:null, spend:null };
+
+function renderQ1(){
+  return `
+  <p class="q-label">1. What is your Ambition for the future?</p>
+  <button type="button" class="option-btn" data-value="Want to save up for a house">🏠 Want to save up for a house</button>
+  <button type="button" class="option-btn" data-value="Want to save up to buy a vehicle">🚗 Want to save up to buy a vehicle</button>
+  <button type="button" class="option-btn" data-value="Save for college">🎓 Save for college</button>
+  <button type="button" class="option-btn" data-value="Save for retirement">🛑 Save for retirement</button>
+  <button type="button" class="option-btn" id="otherBtn" data-value="__other__">✍️ Other</button>
+  <div id="otherWrap" class="currency hidden" style="margin-top:8px;">
+    <span>✍️</span>
+    <input id="otherInput" type="text" placeholder="Describe your goal" />
+  </div>`;
+}
+function renderMoneyQ(label,inputId){
+  return `<p class="q-label">${label}</p>
+  <div class="currency"><span>$</span><input id="${inputId}" type="text" placeholder="0.00" /></div>`;
+}
+const steps=[
+  {id:'ambition', render:renderQ1, getValue:()=>{ const a=host.querySelector('.option-btn.active'); if(!a)return null; const val=a.dataset.value; if(val==='__other__'){const t=document.getElementById('otherInput')?.value.trim(); return t?t:null;} return val;} },
+  {id:'cost', render:()=>renderMoneyQ('2. How much does it cost?','targetInput'), getValue:()=>Number(document.getElementById('targetInput')?.value)||0 },
+  {id:'income', render:()=>renderMoneyQ('3. What is your monthly salary after taxes?','incomeInput'), getValue:()=>Number(document.getElementById('incomeInput')?.value)||0 },
+  {id:'spend', render:()=>renderMoneyQ('4. What is your average spending per month?','spendInput'), getValue:()=>Number(document.getElementById('spendInput')?.value)||0 }
+];
+function renderSurvey(){
+  host.innerHTML=steps[idx].render();
+  host.querySelectorAll('.option-btn').forEach(btn=>{ btn.onclick=()=>{ host.querySelectorAll('.option-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); document.getElementById('otherWrap')?.classList.toggle('hidden',btn.dataset.value!=='__other__'); if(btn.dataset.value==='__other__') document.getElementById('otherInput').focus();}} );
+  const pct=((idx+1)/steps.length)*100; progressBar.style.width=pct+'%'; progressCount.textContent=`Question ${idx+1} of ${steps.length}`; backBtn.disabled=idx===0;
+}
+function validateStore(){ const val=steps[idx].getValue(); if(val===null || val==='') return false; answers[steps[idx].id]=val; return true; }
+backBtn.onclick=()=>{
+  if(idx>0){ idx--; renderSurvey(); }
+};
+nextBtn.onclick=()=>{
+  if(!validateStore()) return;
+  if(idx<steps.length-1){ idx++; renderSurvey(); } else { finishSurvey(); }
+};
+function finishSurvey(){
+  surveyModal.classList.add('hidden'); backMainBtn.style.display='block';
+  calculatorMain.style.display='block';
+  const ambition=answers.ambition||""; const cost=answers.cost||0; const salary=answers.income||0; const spending=answers.spend||0;
+  const leftover=Math.max(0,salary-spending); const contribution=leftover*0.01;
+  document.getElementById("contribution").value=contribution.toFixed(2);
+  document.getElementById("initialInvestment").value=0;
+  document.getElementById("annualReturn").value=7;
+  if(ambition.toLowerCase().includes("house")||ambition.toLowerCase().includes("vehicle")){
+    const monthly=contribution;
+    const yearsNeeded=Math.max(1,Math.ceil(cost/(monthly*12||1)));
+    document.getElementById("yearsSlider").value=Math.min(yearsNeeded,parseInt(document.getElementById("yearsSlider").max,10));
+    document.getElementById("yearsValue").textContent=document.getElementById("yearsSlider").value;
+  }
+  calculateCompound();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Emotional Reflection — Full</title>
+<style>
+  /* ----- small styling for tabs ----- */
+.game-tab {
+  font-size: 16px;
+  padding: 8px 12px;
+  margin: 0 6px;
+  border-radius: 8px;
+  border: 1px solid #cfeaff;
+  background: #f7fbff;
+  cursor: pointer;
+}
+.game-tab[aria-pressed="true"] { background:#e6f3ff; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
+
+/* keep game sections layout scoped */
+.game-section { max-width:860px; margin: 8px auto; padding: 12px; }
+
+/* bubble canvas - visual polish */
+#bubbleCanvas {
+  display:block;
+  width:100%;
+  max-width:820px;
+  height:auto;
+  border-radius:10px;
+  border:1px solid rgba(30,120,200,0.08);
+  background: linear-gradient(135deg,#e9fbff 0%,#ffffff 100%);
+}
+
+/* matching board layout: 5 columns x 4 rows = 20 cards */
+.game-matching-board {
+  display:grid;
+  grid-template-columns: repeat(5, 110px);
+  gap: 12px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+/* tile / flip styling (scoped: .game- prefix) */
+.game-card-tile {
+  width:110px; height:140px; perspective:1000px; cursor:pointer; user-select:none;
+}
+.game-card-inner {
+  width:100%; height:100%; border-radius:10px; position:relative;
+  transition: transform 0.55s cubic-bezier(.2,.9,.3,1); transform-style: preserve-3d;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.09);
+}
+.game-card-tile.flipped .game-card-inner { transform: rotateY(180deg); }
+.game-card-front, .game-card-back {
+  position:absolute; left:0; top:0; right:0; bottom:0;
+  display:flex; align-items:center; justify-content:center; backface-visibility:hidden;
+  border-radius:10px; font-size:44px;
+}
+.game-card-front {
+  background: linear-gradient(180deg,#f3f3f3,#e8e8e8); color:#333;
+}
+.game-card-back {
+  background: linear-gradient(180deg,#2b8cff,#1a6fe0); color:white; transform: rotateY(180deg);
+}
+
+/* match animation: grow and settle */
+.game-card-tile.matched .game-card-inner {
+  animation: gameMatchSettle 420ms ease forwards;
+}
+@keyframes gameMatchSettle {
+  0%   { transform: rotateY(180deg) scale(1); }
+  40%  { transform: rotateY(180deg) scale(1.22); }
+  70%  { transform: rotateY(180deg) scale(0.95); }
+  100% { transform: rotateY(180deg) scale(1); }
+}
+
+/* removing matched tiles (fade out before remove) */
+.game-card-tile.removing { transition: opacity 300ms ease, transform 300ms ease; opacity:0; transform: scale(0.92); pointer-events:none; }
+
+/* small scoped button styles so we don't change site-wide buttons */
+.btn-next { padding:8px 12px; border-radius:8px; background:#1e90ff; color:white; border:none; cursor:pointer; }
+
+  :root{
+    --blue:#0077b6; --blue-dark:#005f86; --muted:#6b7280;
+    --bg:#e8f6ff; --card:#ffffff;
+  }
+  body{font-family:Arial,Helvetica,sans-serif;margin:0;background:var(--bg);color:#122;line-height:1.4}
+  h1{ text-align:center;color:#0d3b66;margin:18px 0;}
+  /* Home circles */
+  .home {display:flex;justify-content:center;gap:28px;flex-wrap:wrap;padding:40px 12px;}
+  .circle{width:180px;height:180px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer;color:#fff;font-weight:800;padding:14px;box-shadow:0 10px 28px rgba(3,7,18,0.12);transition:transform .12s, box-shadow .12s}
+  .circle:hover{transform:scale(1.06);box-shadow:0 16px 40px rgba(3,7,18,0.18)}
+  .circle.surveys{background:var(--blue)}
+  .circle.breathing{background:#00b4d8}
+  .circle.bubble{background:#90e0ef;color:#05395a}
+
+  /* page container */
+  .page {max-width:980px;margin:18px auto;padding:0 14px;}
+  .top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .btn-flat{background:var(--muted);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
+  .btn-primary{background:var(--blue);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer}
+  .btn-primary:active{background:var(--blue-dark)}
+
+  /* Tabs */
+  .tabs{display:flex;gap:8px;justify-content:center;margin-bottom:18px;flex-wrap:wrap}
+  .tab{padding:10px 16px;border-radius:8px;background:var(--blue);color:#fff;cursor:pointer;font-weight:700}
+  .tab.inactive{background:#cfeefc;color:#0d3b66}
+  .tab.active{background:var(--blue-dark)}
+
+  /* Sections/cards */
+  .card{background:var(--card);border-radius:12px;padding:20px;box-shadow:0 8px 24px rgba(3,7,18,0.06);margin-bottom:16px}
+  .survey-description{font-style:italic;color:#475569;margin-bottom:12px}
+
+  /* Questions */
+  .survey-question{margin:12px 0;padding:14px;border-radius:8px;background:#fbfdff;border:1px solid #e6f0f6;display:none}
+  .survey-question.show{display:block}
+  .survey-question p{margin:0 0 8px 0;font-weight:700}
+  .options label{display:block;margin:6px 0;cursor:pointer}
+  .options input[type="radio"]{margin-right:10px}
+
+  /* Selects */
+  select{padding:8px;border-radius:6px;border:1px solid #cbd5e1;width:100%;max-width:420px}
+
+  /* nav */
+  .nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+  button{font-weight:700;border-radius:8px;border:none;padding:10px 14px;cursor:pointer}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .btn-secondary{background:#6b7280;color:white}
+  .btn-next{background:var(--blue);color:white}
+  .btn-home{background:#0d3b66;color:white}
+
+  /* progress */
+  .progress-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .progress-info{min-width:150px;color:#0f172a;font-weight:700}
+  .progress-container{flex:1;background:#e6eef8;border-radius:999px;overflow:hidden;height:18px}
+  .progress-bar{height:100%;background:var(--blue);width:0%;color:#fff;font-size:12px;text-align:center;line-height:18px;transition:width .25s ease}
+
+  /* breathing */
+  #breathing-message{margin-top:14px;padding:28px;border-radius:10px;color:#fff;text-align:center;font-size:22px;font-weight:700;transition:background .3s ease;background:var(--blue)}
+  #timer{ text-align:center;font-size:22px;font-weight:800;color:#0d3b66;margin-top:8px }
+
+  /* modal */
+  .modal{display:none;position:fixed;inset:0;background:rgba(6,8,15,.45);z-index:999;align-items:center;justify-content:center}
+  .modal .inner{background:#fff;padding:18px;border-radius:10px;max-width:720px;width:92%}
+  .resource{display:inline-block;padding:8px 12px;border-radius:8px;margin:6px;font-weight:700;color:#fff}
+
+  /* bubble */
+  #bubbleCanvas{width:100%;max-width:900px;height:420px;background:#caf0f8;border-radius:10px;display:block;margin:0 auto;border:1px solid var(--blue)}
+
+  @media(max-width:640px){
+    .home{gap:18px}
+    .circle{width:140px;height:140px;font-size:14px}
+  }
+
+  /* Self-Awareness Slider - Blue Theme */
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.slider-container input[type="range"] {
+  -webkit-appearances: none;
+  width: 200px;
+  height: 8px;
+  border-radius: 5px;
+  background: #0077b6; /* blue track */
+  outline: none;
+}
+
+.slider-container input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #00aaff; /* blue thumb */
+  cursor: pointer;
+  border: 2px solid #fff;
+}
+
+.slider-container input[type="range"]::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #00aaff;
+  cursor: pointer;
+  border: 2px solid #fff;
+}
+
+.slider-value {
+  font-size: 1.5rem;
+}
+
+</style>
+</head>
+
+<body>
+<!-- Mainpage button top right -->
+<button id="mainpageBtn" onclick="location.href='index.html'">Mainpage</button>
+
+<!-- Mute/Unmute button bottom left -->
+<button id="muteBtn">Mute</button>
+
+<!-- Audio element for background music -->
+<audio id="bgMusic" loop>
+    <source src="Sunset-Landscape(chosic.com).mp3" type="audio/mpeg">
+    <source src="Sonder(chosic.com).mp3" type="audio/mpeg">
+    <source src="Heartbreaking(chosic.com).mp3" type="audio/mpeg">
+    <source src="Birds-Of-Passage-between-The-Hours-Spheria-Rework-chosic.com.mp3" type="audio/mpeg">
+    <source src="background-music-soft-calm-333111.mp3" type="audio/mpeg">
+    <source src="calm-soft-background-music-400912.mp3" type="audio/mpeg">
+    <source src="calm-soft-background-music-398280.mp3" type="audio/mpeg">
+    <source src="please-calm-my-mind-125566.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+</audio>
+
+<!-- Overlay with play button -->
+<div id="overlay">
+    <button id="playMusicBtn">
+        Play Music and Destress<br>
+        Music calms your mind and helps you relax.
+    </button>
+</div>
+
+<style>
+    /* Mainpage button top right */
+    #mainpageBtn {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        padding: 10px 15px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        z-index: 1;
+    }
+
+    /* Mute/unmute button bottom left */
+    #muteBtn {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        padding: 10px 15px;
+        background-color: #2ecc71;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        z-index: 1;
+    }
+
+    /* Overlay with blur */
+    #overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        backdrop-filter: blur(8px);
+        background: rgba(0,0,0,0.3);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 999; /* ensures it covers everything */
+    }
+
+    /* Play music button center overlay */
+    #playMusicBtn {
+        padding: 40px 50px;
+        background-color: #f39c12;
+        color: white;
+        border: none;
+        border-radius: 15px;
+        cursor: pointer;
+        font-size: 22px;
+        text-align: center;
+        line-height: 1.5;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+</style>
+
+<script>
+    const music = document.getElementById('bgMusic');
+    const playBtn = document.getElementById('playMusicBtn');
+    const overlay = document.getElementById('overlay');
+    const muteBtn = document.getElementById('muteBtn');
+
+    // Play music and remove overlay when clicked
+    playBtn.addEventListener('click', () => {
+        music.play().catch(() => console.log("Autoplay blocked"));
+        overlay.style.display = 'none'; // remove overlay and button
+    });
+
+    // Mute/unmute functionality
+    muteBtn.addEventListener('click', () => {
+        music.muted = !music.muted;
+        muteBtn.textContent = music.muted ? "Unmute" : "Mute";
+    });
+</script>
+
+
+  <h1>🧠 Emotional Reflection</h1>
+
+  <!-- HOME -->
+  <div id="home" class="home">
+    <div class="circle surveys" onclick="openSurveys()">😊<br>Surveys<br>🧩 🪞</div>
+    <div class="circle breathing" onclick="openBreathing()">💨<br>Deep Breathing</div>
+    <div class="circle bubble" onclick="openBubble()">🔵<br>Bubble Game</div>
+  </div>
+
+  <div class="page" id="app" style="display:none">
+    <!-- top row: home button -->
+    <div class="top-row">
+      <div></div>
+      <div>
+        <button id="emotional-home" class="btn-home" onclick="goHome()">🏠 Home</button>
+        
+      </div>
+    </div>
+
+    <!-- SURVEYS -->
+    <section id="surveys-section" class="card" style="display:none">
+      <div class="tabs" role="tablist" aria-label="Survey tabs">
+        <div id="tab-emotional" class="tab active" onclick="switchSurvey('emotional')">😊 Mental Health</div>
+        <div id="tab-personality" class="tab inactive" onclick="switchSurvey('personality')">🧩 Personality</div>
+        <div id="tab-awareness" class="tab inactive" onclick="switchSurvey('awareness')">🪞 Self-Awareness</div>
+      </div>
+
+      <!-- EMOTIONAL SURVEY -->
+      <div id="emotional" class="survey-card">
+        <h2>😊 Mental Health (15 items)</h2>
+        <p class="survey-description">Answer truthfully. Options: Never → Always. (Some items are inverted in scoring.)</p>
+
+        <div class="progress-row">
+          <div class="progress-info" id="emotional-counter">Question 1 of 15</div>
+          <div class="progress-container"><div id="emotional-progress" class="progress-bar">0%</div></div>
+        </div>
+
+        <div id="emotional-questions"></div>
+
+        <div class="nav-row">
+          <button id="emotional-back" class="btn-secondary" onclick="prev('emotional')" disabled>◀️ Back</button>
+          <div>
+            <button class="btn-secondary" onclick="openSurveysHome()">Surveys Home</button>
+            <button id="emotional-next" class="btn-next" onclick="next('emotional')" disabled>Next ▶️</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PERSONALITY SURVEY -->
+      <div id="personality" class="survey-card" style="display:none">
+        <h2>🧩 Personality Test (20 items)</h2>
+        <p class="survey-description">Choose the option that best matches what you would do. This computes your dominant trait: Creative / Outgoing / Analytical / Reserved.</p>
+
+        <div class="progress-row">
+          <div class="progress-info" id="personality-counter">Question 1 of 20</div>
+          <div class="progress-container"><div id="personality-progress" class="progress-bar">0%</div></div>
+        </div>
+
+        <div id="personality-questions"></div>
+
+        <div class="nav-row">
+          <button id="personality-back" class="btn-secondary" onclick="prev('personality')" disabled>◀️ Back</button>
+          <div>
+            <button class="btn-secondary" onclick="openSurveysHome()">Surveys Home</button>
+            <button id="personality-next" class="btn-next" onclick="next('personality')" disabled>Next ▶️</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SELF-AWARENESS SURVEY -->
+      <div id="awareness" class="survey-card" style="display:none">
+        <h2>🪞 Self-Awareness (15 items)</h2>
+        <p class="survey-description">Choose the response that best fits: Strongly Disagree → Strongly Agree.</p>
+
+        <div class="progress-row">
+          <div class="progress-info" id="awareness-counter">Question 1 of 15</div>
+          <div class="progress-container"><div id="awareness-progress" class="progress-bar">0%</div></div>
+        </div>
+
+        <div id="awareness-questions"></div>
+
+        <div class="nav-row">
+          <button id="awareness-back" class="btn-secondary" onclick="prev('awareness')" disabled>◀️ Back</button>
+          <div>
+            <button class="btn-secondary" onclick="openSurveysHome()">Surveys Home</button>
+            <button id="awareness-next" class="btn-next" onclick="next('awareness')" disabled>Next ▶️</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BREATHING -->
+    <section id="breathing-section" class="card" style="display:none">
+      <h2>💨 Deep Breathing</h2>
+      <p class="survey-description">Inhale → Hold → Exhale. Colors: inhale = orange, hold = soft red, exhale = soft green. 4s/4s/6s per cycle, 5 cycles total.</p>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button class="btn-next" id="breathing-start" onclick="startBreathing()">Start</button>
+        <button class="btn-secondary" onclick="stopBreathing()">Stop</button>
+      </div>
+      <div id="breathing-message">Ready to breathe...</div>
+      <div id="timer"></div>
+    </section>
+
+    <!-- ===== game tabs (hidden by default) ===== -->
+<div id="gameTabs" style="display:none;max-width:860px;margin:0 auto 12px;text-align:center;">
+  <button id="tab-bubble" class="game-tab" aria-pressed="false">🔵 Bubble</button>
+  <button id="tab-match"  class="game-tab" aria-pressed="false">🃏 Matching</button>
+</div>
+
+<!-- ===== Bubble Game section (if you already have this, replace your block with this) ===== -->
+<section id="bubble-section" class="card game-section" style="display:none;">
+  <h2>🔵 Bubble Game</h2>
+  <p class="survey-description">Click bubbles to pop them and increase your score.</p>
+
+  <canvas id="bubbleCanvas" width="820" height="420" style="width:100%;max-width:820px;"></canvas>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+    <div>Score: <strong id="scoreDisplay">0</strong></div>
+    <div>
+      <!-- START button: this will start/reset bubble game -->
+      <button id="startBubbleBtn" class="btn-next">Start / Reset</button>
+      <!-- NOTE: No Home button added here (we won't create duplicates) -->
+    </div>
+  </div>
+</section>
+
+<!-- ===== Matching Game section ===== -->
+<section id="matching-section" class="card game-section" style="display:none;">
+  <h2>🃏 Matching Game</h2>
+  <p class="survey-description">Flip two cards. If they match they disappear. Find all 10 pairs (20 cards).</p>
+
+  <div id="matchingBoard" class="game-matching-board" aria-live="polite"></div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;">
+    <div>Score: <strong id="matchScore">0</strong></div>
+    <div>
+      <button id="startMatchBtn" class="btn-next">Start / Reset</button>
+      <!-- no Home button here either -->
+    </div>
+  </div>
+</section>
+
+
+  <!-- Results modal -->
+  <div id="resultModal" class="modal" role="dialog" aria-hidden="true" style="display:none;align-items:center;">
+    <div class="inner card" style="max-width:760px;">
+      <h3 id="resultTitle">Results</h3>
+      <div id="resultBody" style="line-height:1.5;"></div>
+      <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:10px;">
+        <button class="btn-secondary" onclick="closeModal()">Close</button>
+        <button class="btn-next" onclick="goHome()">Home</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* -------------------------
+   DATA: Questions (as approved)
+   ------------------------- */
+const fullPersonalityQs = [
+  "At a party, what would you most likely do?\n1. Have a blast with everyone\n2. Stay close to friends\n3. Leave because of the crowd and noise\n4. Only go for the sake of the inviter",
+  "When faced with a problem, what’s your first instinct?\n1. Brainstorm creative solutions\n2. Ask friends for help\n3. Analyze step by step\n4. Think quietly by yourself",
+  "If you had a free weekend, how would you spend it?\n1. Painting, writing, or a creative project\n2. Meeting new people or going out\n3. Solving puzzles or coding\n4. Relaxing alone with a book",
+  "How do you usually make decisions?\n1. Based on intuition and creativity\n2. By considering what others feel\n3. By logic and facts\n4. By personal reflection",
+  "If asked to present in front of a group, how would you react?\n1. Excited to make it fun\n2. Comfortable and energetic\n3. Nervous but prepared with notes\n4. Prefer to avoid it",
+  "What motivates you the most?\n1. Expressing myself\n2. Connecting with others\n3. Achieving goals\n4. Finding peace of mind",
+  "Which subject would you enjoy most?\n1. Art, music, drama\n2. Sports, social studies\n3. Math, science, computers\n4. Literature, philosophy",
+  "How do you handle conflict?\n1. Try to creatively resolve it\n2. Talk it out openly\n3. Look at facts calmly\n4. Withdraw and reflect alone",
+  "What role do you usually take in a group project?\n1. The creative idea-maker\n2. The leader who motivates others\n3. The researcher and planner\n4. The quiet but reliable worker",
+  "What type of movie do you prefer?\n1. Fantasy/adventure\n2. Comedy/social movies\n3. Mystery/thriller\n4. Drama/reflection",
+  "How do you spend time online?\n1. Making or sharing creative posts\n2. Chatting and social media\n3. Researching/learning\n4. Watching quietly",
+  "Your dream job would be…\n1. Artist, musician, designer\n2. Entrepreneur, speaker, entertainer\n3. Scientist, engineer, analyst\n4. Writer, philosopher, researcher",
+  "If you won an award, what would it most likely be for?\n1. Creativity\n2. Leadership\n3. Problem-solving\n4. Thoughtfulness",
+  "How do you recharge after a long day?\n1. Doing something creative\n2. Hanging out with friends\n3. Organizing or gaming\n4. Being alone",
+  "What’s your biggest strength?\n1. Imagination\n2. Charisma\n3. Logic\n4. Self-reflection",
+  "How do you feel about surprises?\n1. Love them\n2. Enjoy with friends\n3. Prefer to plan ahead\n4. Don’t like them at all",
+  "How do you usually express emotions?\n1. Through art/music/creativity\n2. Talking and sharing openly\n3. Rationalizing and analyzing\n4. Keeping them private",
+  "What’s your ideal vacation?\n1. Exploring new cultures\n2. Beach with friends\n3. Museum and history trip\n4. Quiet retreat in nature",
+  "What do people often compliment you on?\n1. Creativity\n2. Energy\n3. Intelligence\n4. Thoughtfulness",
+  "If you had to describe yourself in one word, it would be:\n1. Creative\n2. Outgoing\n3. Analytical\n4. Reserved",
+  // 20 more to make 40
+  "Do you enjoy trying new hobbies?\n1. Always\n2. Sometimes with friends\n3. Rarely\n4. Never",
+  "How do you prefer to learn?\n1. By doing creative projects\n2. Through discussion\n3. Step-by-step instructions\n4. Reading quietly",
+  "Do you like surprises?\n1. Love them\n2. Enjoy sometimes\n3. Prefer planning\n4. Dislike surprises",
+  "How do you approach tasks?\n1. Creatively\n2. Socially with help\n3. Logically and systematically\n4. At my own pace alone",
+  "Do you like public speaking?\n1. Love it\n2. Enjoy small groups\n3. Only if necessary\n4. Avoid it",
+  "Are you comfortable taking risks?\n1. Yes, often\n2. Sometimes\n3. Rarely\n4. Never",
+  "Do you enjoy leadership roles?\n1. Always\n2. Sometimes\n3. Rarely\n4. Never",
+  "How do you feel in crowds?\n1. Energized\n2. Comfortable\n3. Uneasy\n4. Anxious",
+  "How do you spend free time?\n1. Creative activities\n2. Socializing\n3. Planning and organizing\n4. Alone reflection",
+  "Do you like teamwork?\n1. Love it\n2. Enjoy sometimes\n3. Prefer individual work\n4. Avoid it",
+  "Do you enjoy debates?\n1. Yes, love discussion\n2. Sometimes\n3. Rarely\n4. Never",
+  "How do you handle mistakes?\n1. Learn creatively\n2. Discuss with friends\n3. Analyze logically\n4. Reflect quietly",
+  "Do you like problem-solving?\n1. Always\n2. Sometimes\n3. Rarely\n4. Never",
+  "Do you enjoy brainstorming?\n1. Yes\n2. Sometimes\n3. Rarely\n4. Never",
+  "Are you curious about people?\n1. Very\n2. Somewhat\n3. Slightly\n4. Not at all",
+  "Do you prefer structured plans?\n1. No, like flexibility\n2. Some structure\n3. Mostly structured\n4. Strictly structured",
+  "Do you enjoy learning new skills?\n1. Always\n2. Often\n3. Sometimes\n4. Rarely",
+  "Do you express your feelings?\n1. Freely\n2. Sometimes\n3. Rarely\n4. Never",
+  "Are you reflective?\n1. Always\n2. Often\n3. Sometimes\n4. Rarely",
+  "Do you enjoy reading?\n1. Love it\n2. Sometimes\n3. Rarely\n4. Never",
+  "Do you like watching movies?\n1. All genres\n2. Comedy/social\n3. Thriller/mystery\n4. Drama",
+  "Do you enjoy sports?\n1. Very much\n2. Sometimes\n3. Rarely\n4. Not at all",
+  "Do you like music?\n1. Always\n2. Sometimes\n3. Rarely\n4. Never",
+  "Do you enjoy nature?\n1. Love it\n2. Sometimes\n3. Rarely\n4. Never",
+  "Do you like helping others?\n1. Always\n2. Sometimes\n3. Rarely\n4. Never",
+  "Do you enjoy planning events?\n1. Always\n2. Sometimes\n3. Rarely\n4. Never",
+  "Do you like exploring new places?\n1. Always\n2. Sometimes\n3. Rarely\n4. Never",
+  "Do you enjoy cooking?\n1. Always\n2. Sometimes\n3. Rarely\n4. Never",
+  "Do you enjoy writing?\n1. Always\n2. Sometimes\n3. Rarely\n4. Never"
+];
+
+const fullSelfAwarenessQs = [
+  "I often reflect on my feelings and why I feel them.",
+  "I can recognize my strengths clearly.",
+  "I know the situations that make me stressed.",
+  "I often think about how my actions affect others.",
+  "I find it easy to identify my weaknesses.",
+  "I notice changes in my mood throughout the day.",
+  "I understand what motivates me the most.",
+  "I recognize when I need to take a break.",
+  "I am aware of how my body reacts when I am anxious.",
+  "I reflect on my goals regularly.",
+  "I can admit when I am wrong.",
+  "I am able to describe my personality traits.",
+  "I know what kinds of people I connect best with.",
+  "I reflect on past experiences to learn from them.",
+  "I am aware when I project my emotions onto others.",
+  // 25 more...
+  "I notice how my energy changes during the day.",
+  "I understand why I make certain choices.",
+  "I can separate emotions from facts.",
+  "I am aware of when I am stressed.",
+  "I consider how others feel in interactions.",
+  "I can stay calm under pressure.",
+  "I pay attention to my thoughts and patterns.",
+  "I know what situations make me happy.",
+  "I recognize when I need support.",
+  "I reflect on mistakes to improve.",
+  "I can clearly explain my thoughts.",
+  "I am aware of my biases.",
+  "I notice how my environment affects my mood.",
+  "I take responsibility for my actions.",
+  "I am conscious of how I communicate.",
+  "I set aside time to think about myself.",
+  "I can identify when I feel anxious.",
+  "I understand my emotional triggers.",
+  "I notice what activities energize me.",
+  "I reflect on personal growth.",
+  "I can recognize when I am projecting onto others.",
+  "I am aware of my communication style.",
+  "I notice how my thoughts affect my actions.",
+  "I understand my learning style.",
+  "I am aware of my emotional patterns.",
+  "I observe how I react in conflicts.",
+  "I reflect on successes.",
+  "I recognize when I need a break.",
+  "I am aware of my mental and physical state.",
+  "I consider long-term consequences of actions.",
+  "I notice my habits and routines.",
+  "I can separate my feelings from assumptions.",
+  "I understand my strengths and weaknesses.",
+  "I notice patterns in relationships.",
+  "I pay attention to my mood shifts.",
+  "I am conscious of how I influence others.",
+  "I reflect on daily experiences.",
+  "I understand what gives me satisfaction.",
+  "I recognize when I am distracted."
+];
+
+const fullMentalQs = [
+  "I feel stressed or overwhelmed.",
+  "I have trouble sleeping because of thoughts.",
+  "I feel motivated and energetic.",
+  "I experience feelings of sadness for no clear reason.",
+  "I enjoy spending time with people I care about.",
+  "I find it hard to focus on tasks.",
+  "I feel confident in myself.",
+  "I get irritated easily.",
+  "I feel hopeful about the future.",
+  "I avoid activities I used to enjoy.",
+  "I feel relaxed and calm.",
+  "I worry excessively about small things.",
+  "I feel supported by people around me.",
+  "I experience physical symptoms like headaches due to stress.",
+  "I find joy in daily activities.",
+  // 25 more...
+  "I feel anxious in new situations.",
+  "I can handle pressure well.",
+  "I get overwhelmed easily.",
+  "I feel content with my life.",
+  "I get frustrated when plans change.",
+  "I find it easy to relax.",
+  "I feel lonely sometimes.",
+  "I can manage multiple tasks effectively.",
+  "I feel positive about challenges.",
+  "I struggle with concentration.",
+  "I feel grateful for my relationships.",
+  "I have trouble letting go of worries.",
+  "I enjoy my daily routine.",
+  "I feel nervous in social situations.",
+  "I can control my impulses.",
+  "I feel balanced emotionally.",
+  "I get anxious about the future.",
+  "I enjoy being productive.",
+  "I feel sad occasionally.",
+  "I can manage stress effectively.",
+  "I find motivation in daily tasks.",
+  "I feel overwhelmed by responsibilities.",
+  "I enjoy spending time alone.",
+  "I am able to calm myself when upset.",
+  "I feel optimistic about my goals.",
+  "I get irritated by small inconveniences.",
+  "I enjoy hobbies regularly.",
+  "I feel supported by my peers.",
+  "I have trouble staying organized.",
+  "I feel satisfied with my accomplishments.",
+  "I worry about things beyond my control.",
+  "I feel energized after rest.",
+  "I get frustrated easily.",
+  "I feel calm during pressure.",
+  "I have difficulty making decisions.",
+  "I enjoy social interactions.",
+  "I feel drained after challenges.",
+  "I can recover quickly from setbacks.",
+  "I feel hopeful about life."
+];
+
+/* -------------------------
+   App state
+------------------------- */
+let state = {
+  view: 'home',
+  currentSurvey: 'emotional',
+  idx: { emotional:0, personality:0, awareness:0 },
+  answers: { emotional: [], personality: [], awareness: [] }
+};
+
+/* -------------------------
+   Shuffle helper
+------------------------- */
+function shuffleArray(arr) {
+  const copy = [...arr];
+  for(let i=copy.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [copy[i],copy[j]]=[copy[j],copy[i]];
+  }
+  return copy;
+}
+
+/* -------------------------
+   Initialize survey questions (15 each)
+------------------------- */
+let mentalQs = shuffleArray(fullMentalQs).slice(0,15);
+let personalityQs = shuffleArray(fullPersonalityQs).slice(0,15);
+let selfAwarenessQs = shuffleArray(fullSelfAwarenessQs).slice(0,15);
+
+state.answers.emotional = Array(mentalQs.length).fill(null);
+state.answers.personality = Array(personalityQs.length).fill(null);
+state.answers.awareness = Array(selfAwarenessQs.length).fill(null);
+
+/* -------------------------
+   Utilities: show/hide
+------------------------- */
+function hideAllMain(){
+  document.getElementById('home').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('surveys-section').style.display='none';
+  document.getElementById('breathing-section').style.display='none';
+  document.getElementById('bubble-section').style.display='none';
+}
+
+function goHome(){
+  console.log('Click this button to go home.');
+  document.getElementById('home').style.display='flex';
+  document.getElementById('app').style.display='none';
+  stopBreathing(); stopGame();
+}
+
+/* -------------------------
+   Open sections
+------------------------- */
+function openSurveys(){ hideAllMain(); document.getElementById('surveys-section').style.display='block'; state.view='surveys'; switchSurvey('emotional'); }
+function openBreathing(){ hideAllMain(); document.getElementById('breathing-section').style.display='block'; state.view='breathing'; }
+function openBubble(){ hideAllMain(); document.getElementById('bubble-section').style.display='block'; state.view='bubble'; }
+
+/* -------------------------
+   Render survey questions
+------------------------- */
+function createEmotionalQuestions(){
+  const container=document.getElementById('emotional-questions');
+  container.innerHTML='';
+  mentalQs.forEach((q,i)=>{
+    const div=document.createElement('div');
+    div.className='survey-question';
+    div.id=`emotional-q-${i}`;
+    div.innerHTML=`<p>${i+1}. ${q}</p>
+      <div class="options">
+        <select onchange="onAnswer('emotional',${i},this.value)">
+          <option value="">Select...</option>
+          <option value="0">Never</option>
+          <option value="1">Rarely</option>
+          <option value="2">Sometimes</option>
+          <option value="3">Often</option>
+          <option value="4">Always</option>
+        </select>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+function createPersonalityQuestions(){
+  const container=document.getElementById('personality-questions');
+  container.innerHTML='';
+  personalityQs.forEach((q,i)=>{
+    const div=document.createElement('div');
+    div.className='survey-question';
+    div.id=`personality-q-${i}`;
+    const lines=q.split('\n');
+    const prompt=lines[0];
+    const opts=lines.slice(1).map(s=>s.replace(/^\d+\.\s*/,'').trim());
+    let html=`<p>${i+1}. ${prompt}</p><div class="options">`;
+    opts.forEach((opt,j)=>{
+      html+=`<label><input type="radio" name="personality-${i}" value="${j}" onchange="onAnswer('personality',${i},this.value)"> ${opt}</label>`;
+    });
+    html+='</div>';
+    div.innerHTML=html;
+    container.appendChild(div);
+  });
+}
+
+function createAwarenessQuestions(){
+  const container=document.getElementById('awareness-questions');
+  container.innerHTML='';
+  selfAwarenessQs.forEach((q,i)=>{
+    const div=document.createElement('div');
+    div.className='survey-question';
+    div.id=`awareness-q-${i}`;
+    div.innerHTML=`<p>${i+1}. ${q}</p>
+      <div class="options">
+        <select onchange="onAnswer('awareness',${i},this.value)">
+          <option value="">Select...</option>
+          <option value="0">Strongly Disagree</option>
+          <option value="1">Disagree</option>
+          <option value="2">Maybe</option>
+          <option value="3">Agree</option>
+          <option value="4">Strongly Agree</option>
+        </select>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+/* -------------------------
+   Show question and progress
+------------------------- */
+function showQuestion(survey,index){
+  const total=(survey==='emotional')?mentalQs.length:(survey==='personality')?personalityQs.length:selfAwarenessQs.length;
+  for(let i=0;i<total;i++){
+    const el=document.getElementById(`${survey}-q-${i}`);
+    if(el) el.classList.remove('show');
+  }
+  const visible=document.getElementById(`${survey}-q-${index}`);
+  if(visible) visible.classList.add('show');
+  const existing=state.answers[survey][index];
+  if(survey==='emotional'){
+    const sel=document.querySelector(`#emotional-q-${index} select`);
+    if(sel) sel.value=existing===null?'':existing;
+  } else if(survey==='personality'){
+    const radios=document.querySelectorAll(`#personality-q-${index} input[type="radio"]`);
+    radios.forEach(r=>r.checked=(existing!==null && String(existing)===r.value));
+  } else if(survey==='awareness'){
+    const sel=document.querySelector(`#awareness-q-${index} select`);
+    if(sel) sel.value=existing===null?'':existing;
+  }
+  const backBtn=document.getElementById(`${survey}-back`);
+  if(backBtn) backBtn.disabled=index===0;
+  const nextBtn=document.getElementById(`${survey}-next`);
+  if(nextBtn) nextBtn.disabled=(existing===null);
+  const pct=Math.round((index/total)*100);
+  const progressEl=document.getElementById(`${survey}-progress`);
+  if(progressEl){ progressEl.style.width=pct+'%'; progressEl.textContent=pct+'%'; }
+  const counter=document.getElementById(`${survey}-counter`);
+  if(counter) counter.textContent=`Question ${index+1} of ${total}`;
+}
+
+/* -------------------------
+   Switch tabs
+------------------------- */
+function switchSurvey(tab){
+  state.currentSurvey=tab;
+  document.getElementById('emotional').style.display=(tab==='emotional')?'block':'none';
+  document.getElementById('personality').style.display=(tab==='personality')?'block':'none';
+  document.getElementById('awareness').style.display=(tab==='awareness')?'block':'none';
+  ['emotional','personality','awareness'].forEach(t=>{
+    const el=document.getElementById(`tab-${t}`);
+    if(!el) return;
+    el.classList.remove('active'); el.classList.add('inactive');
+  });
+  const activeTab=document.getElementById(`tab-${tab}`);
+  if(activeTab) activeTab.classList.add('active'); activeTab.classList.remove('inactive');
+  showQuestion(tab,state.idx[tab]);
+}
+
+/* -------------------------
+   Answer & Navigation
+------------------------- */
+function onAnswer(survey,i,value){
+  state.answers[survey][i]=(value===''||value===null)?null:value;
+  if(state.idx[survey]===i){
+    const nextBtn=document.getElementById(`${survey}-next`);
+    if(nextBtn) nextBtn.disabled=false;
+  }
+}
+function prev(survey){ if(state.idx[survey]>0){ state.idx[survey]--; showQuestion(survey,state.idx[survey]); } }
+function next(survey){
+  console.log('Next clicked for',survey);
+  const total=(survey==='emotional')?mentalQs.length:(survey==='personality')?personalityQs.length:selfAwarenessQs.length;
+  const ans=state.answers[survey][state.idx[survey]];
+  if(ans===null||ans===undefined||ans===''){ alert('Please select an answer before continuing.'); return; }
+  if(state.idx[survey]<total-1){ state.idx[survey]++; showQuestion(survey,state.idx[survey]); }
+  else{ computeResults(survey); }
+}
+
+/* -------------------------
+   Reset survey
+------------------------- */
+function resetSurvey(survey){
+  state.idx[survey]=0;
+  state.answers[survey]=Array(15).fill(null);
+  if(survey==='emotional') mentalQs=shuffleArray(fullMentalQs).slice(0,15);
+  if(survey==='personality') personalityQs=shuffleArray(fullPersonalityQs).slice(0,15);
+  if(survey==='awareness') selfAwarenessQs=shuffleArray(fullSelfAwarenessQs).slice(0,15);
+  if(survey==='emotional') createEmotionalQuestions();
+  if(survey==='personality') createPersonalityQuestions();
+  if(survey==='awareness') createAwarenessQuestions();
+  showQuestion(survey,0);
+}
+
+/* -------------------------
+   Modal
+------------------------- */
+function showModal(title,html){
+  document.getElementById('resultTitle').innerText=title;
+  document.getElementById('resultBody').innerHTML=html;
+  document.getElementById('resultModal').style.display='flex';
+}
+function closeModal(){
+  document.getElementById('resultModal').style.display='none';
+  ['emotional','personality','awareness'].forEach(resetSurvey);
+}
+
+/* -------------------------
+   Therapy resources
+------------------------- */
+const therapyResources = [
+  { name: "🧠 BetterHelp", color: "#0077b6", url: "https://www.betterhelp.com" },
+  { name: "💬 Talkspace", color: "#22c55e", url: "https://www.talkspace.com" },
+  { name: "🌐 Psychology Today", color: "#f97316", url: "https://www.psychologytoday.com" },
+  { name: "🤝 7 Cups", color: "#ef476f", url: "https://www.7cups.com" },
+  { name: "🏥 NAMI", color: "#6b28b1", url: "https://www.nami.org" }
+];
+
+/* -------------------------
+   Compute results
+------------------------- */
+function computeResults(survey){
+  if(survey==='personality'){
+    const traitCounts = { Creative:0, Outgoing:0, Analytical:0, Reserved:0 };
+    state.answers.personality.forEach(v => {
+      if(v !== null){
+        const idx = Number(v);
+        if(idx === 0) traitCounts.Creative++;
+        else if(idx === 1) traitCounts.Outgoing++;
+        else if(idx === 2) traitCounts.Analytical++;
+        else if(idx === 3) traitCounts.Reserved++;
+      }
+    });
+
+    const maxVal = Math.max(...Object.values(traitCounts));
+    const topTraits = Object.keys(traitCounts).filter(k => traitCounts[k] === maxVal);
+
+    let html = `<p><strong>🎯 Top trait${topTraits.length>1?'s':''}:</strong> ${topTraits.join(', ')}</p><p>Breakdown:</p><ul>`;
+    Object.entries(traitCounts).forEach(([k,v]) => {
+      let emoji = '';
+      if(k==='Creative') emoji='🎨';
+      if(k==='Outgoing') emoji='🎉';
+      if(k==='Analytical') emoji='🧩';
+      if(k==='Reserved') emoji='📚';
+      html+=`<li><strong>${emoji} ${k}:</strong> ${v}</li>`;
+    });
+    html+='</ul>';
+
+    topTraits.forEach(t => {
+      if(t==='Creative') html+=`<p>🎨 <strong>Creative</strong> — Try art, journaling, design challenges, or creative hobbies to build on this strength.</p>`;
+      if(t==='Outgoing') html+=`<p>🎉 <strong>Outgoing</strong> — Social groups, public speaking, and collaborative projects will suit you.</p>`;
+      if(t==='Analytical') html+=`<p>🧩 <strong>Analytical</strong> — Look for puzzles, data projects, research, or coding challenges.</p>`;
+      if(t==='Reserved') html+=`<p>📚 <strong>Reserved</strong> — Quiet reflection, reading, and deep one-on-one connections are fulfilling.</p>`;
+    });
+
+    html += `<p>✨ Congratulations on completing the Personality Test! 🎊</p>`;
+
+    showModal('Personality Results', html);
+
+  } else if(survey==='emotional'){
+    const negativeIndices = [0,1,3,5,7,9,11,13];
+    let total = 0;
+    for(let i=0; i<mentalQs.length; i++){
+      const valStr = state.answers.emotional[i];
+      const val = (valStr===null || valStr==='') ? 0 : Number(valStr);
+      if(negativeIndices.includes(i)) total += (4 - val);
+      else total += val;
+    }
+
+    const maxTotal = mentalQs.length * 4;
+    const pct = Math.round((total/maxTotal)*100);
+    let label = '', color = '';
+
+    if(pct >= 75){ label="Good — your mental health indicators look strong 😊"; color="#16a34a"; }
+    else if(pct >= 40){ label="Moderate — some areas are fine, some could use attention 🌱"; color="#f59e0b"; }
+    else { label="Needs Help — consider reaching out for support ❤️"; color="#ef4444"; }
+
+    let html = `<p><strong>Score:</strong> ${total} / ${maxTotal} (${pct}%)</p><p style="color:${color};font-weight:700">${label}</p>`;
+
+    if(pct < 75){
+      html += `<p>Recommended resources:</p><div>`;
+      therapyResources.forEach(r => {
+        html += `<a class="resource" href="${r.url}" target="_blank" style="background:${r.color}; display:inline-block; margin:4px; padding:8px 12px; border-radius:8px; color:white; text-decoration:none;">${r.name}</a>`;
+      });
+      html += `</div>`;
+    }
+
+    showModal('Mental Health Results', html);
+
+  } else if(survey==='awareness'){
+    let total = 0;
+    for(let i=0; i<selfAwarenessQs.length; i++){
+      const v = state.answers.awareness[i];
+      const n = (v===null || v==='') ? 0 : Number(v);
+      total += n;
+    }
+
+    const max = selfAwarenessQs.length * 4;
+    const pct = Math.round((total/max)*100);
+    let label='', color='', emoji='';
+
+    if(pct >= 75){ label="High self-awareness — you pay attention to your inner life and patterns"; color="#16a34a"; emoji='🌟🎯'; }
+    else if(pct >= 40){ label="Moderate self-awareness — you have habits in place but can grow further"; color="#f59e0b"; emoji='🌱'; }
+    else { label="Low self-awareness — consider journaling, therapy, or mindfulness"; color="#ef4444"; emoji='🧭❤️'; }
+
+    let html = `<p><strong>Score:</strong> ${total} / ${max} (${pct}%)</p><p style="color:${color};font-weight:700">${emoji} ${label}</p>`;
+
+    if(pct < 75){
+      html += `<p>Recommended resources:</p><div>`;
+      therapyResources.forEach(r => {
+        html += `<a class="resource" href="${r.url}" target="_blank" style="background:${r.color}; display:inline-block; margin:4px; padding:8px 12px; border-radius:8px; color:white; text-decoration:none;">${r.name}</a>`;
+      });
+      html += `</div>`;
+    }
+
+    html += `<p>✨ Congrats on completing the Self-Awareness Test! 🎉</p>`;
+
+    showModal('Self-Awareness Results', html);
+  }
+}
+
+
+/* -------------------------
+   Initial render
+------------------------- */
+createEmotionalQuestions();
+createPersonalityQuestions();
+createAwarenessQuestions();
+showQuestion('emotional',0);
+function createAwarenessQuestions(){
+  const container = document.getElementById('awareness-questions');
+  container.innerHTML = '';
+  const emojis = ["😞","😐","😌","😊","🤩"]; // 0→4 mapped to emojis
+
+  selfAwarenessQs.forEach((q, i) => {
+    const div = document.createElement('div');
+    div.className = 'survey-question';
+    div.id = `awareness-q-${i}`;
+
+    let sliderHTML = `
+      <p>${i+1}. ${q}</p>
+      <div class="slider-container">
+        <input type="range" min="1" max="5" step="1" value="${state.answers.awareness[i]!==null ? Number(state.answers.awareness[i])+1 : 3}" 
+          onchange="onAnswer('awareness',${i}, this.value-1); updateSliderEmoji(${i}, this.value)">
+        <span class="slider-value" id="slider-emoji-${i}">${emojis[state.answers.awareness[i]!==null ? state.answers.awareness[i] : 2]}</span>
+      </div>
+    `;
+    div.innerHTML = sliderHTML;
+    container.appendChild(div);
+  });
+}
+
+function updateSliderEmoji(index, value){
+  const emojis = ["😞","😐","😌","😊","🤩"];
+  const span = document.getElementById(`slider-emoji-${index}`);
+  if(span) span.textContent = emojis[value-1];
+}
+
+/* -------------------------
+   Deep Breathing (single interval, no negatives)
+   ------------------------- */
+let breathingTimer = null;
+function startBreathing(){
+  if (breathingTimer) clearInterval(breathingTimer);
+  const messageEl = document.getElementById('breathing-message');
+  const timerEl = document.getElementById('timer');
+  const steps = [
+    { text: 'Inhale — breathe slowly', color:'#ff9e0d', secs:4 },
+    { text: 'Hold — keep it gentle', color:'#fca5a5', secs:4 },
+    { text: 'Exhale — release slowly', color:'#a7f3d0', secs:6 }
+  ];
+
+  let cycle = 0;
+  let stepIndex = 0;
+  let remaining = steps[stepIndex].secs;
+
+  // initialize display
+  messageEl.textContent = steps[stepIndex].text;
+  messageEl.style.background = steps[stepIndex].color;
+  timerEl.textContent = `${remaining}s`;
+
+  breathingTimer = setInterval(()=>{
+    remaining--;
+    if (remaining < 0) remaining = 0;
+    timerEl.textContent = `${remaining}s`;
+
+    if (remaining === 0){
+      // move to next step
+      stepIndex++;
+      if (stepIndex >= steps.length){
+        stepIndex = 0;
+        cycle++;
+        if (cycle >= 5){
+          clearInterval(breathingTimer);
+          breathingTimer = null;
+          messageEl.textContent = 'Done! 🌟';
+          messageEl.style.background = 'var(--blue)';
+          timerEl.textContent = `Completed ${cycle} cycles`;
+          return;
+        }
+      }
+      remaining = steps[stepIndex].secs;
+      messageEl.textContent = steps[stepIndex].text;
+      messageEl.style.background = steps[stepIndex].color;
+      timerEl.textContent = `${remaining}s`;
+    }
+  }, 1000);
+}
+function stopBreathing(){
+  if (breathingTimer) clearInterval(breathingTimer);
+  breathingTimer = null;
+  document.getElementById('breathing-message').textContent = 'Stopped.';
+  document.getElementById('breathing-message').style.background = 'var(--blue)';
+  document.getElementById('timer').textContent = '';
+}
+
+(function(){
+  /* ---------------- elements ---------------- */
+  const tabBubble = document.getElementById('tab-bubble');
+  const tabMatch  = document.getElementById('tab-match');
+  const gameTabs  = document.getElementById('gameTabs');
+  const bubbleSection = document.getElementById('bubble-section');
+  const matchingSection = document.getElementById('matching-section');
+
+  const startBubbleBtn = document.getElementById('startBubbleBtn');
+  const startMatchBtn = document.getElementById('startMatchBtn');
+
+  // score displays
+  const scoreDisplay = document.getElementById('scoreDisplay');
+  const matchScoreDisplay = document.getElementById('matchScore');
+
+  /* hide tabs initially (defense if CSS not loaded) */
+  if (gameTabs) gameTabs.style.display = 'none';
+
+  /* showOnly controls which section is visible and whether tabs show */
+  function showOnly(section, revealTabs = true) {
+    // hide both
+    if (bubbleSection) bubbleSection.style.display = 'none';
+    if (matchingSection) matchingSection.style.display = 'none';
+    if (gameTabs) {
+      if (revealTabs) gameTabs.style.display = '';
+      else gameTabs.style.display = 'none';
+      if (tabBubble) tabBubble.setAttribute('aria-pressed','false');
+      if (tabMatch) tabMatch.setAttribute('aria-pressed','false');
+    }
+
+    if (section === 'bubble' && bubbleSection) {
+      bubbleSection.style.display = '';
+      if (tabBubble) tabBubble.setAttribute('aria-pressed','true');
+    } else if (section === 'match' && matchingSection) {
+      matchingSection.style.display = '';
+      if (tabMatch) tabMatch.setAttribute('aria-pressed','true');
+    }
+  }
+
+  if (tabBubble) tabBubble.addEventListener('click', () => showOnly('bubble', true));
+  if (tabMatch)  tabMatch.addEventListener('click',  () => showOnly('match', true));
+
+  // ensure tabs are hidden until a game is started; showOnly(null) hides both & tabs:
+  //window.goHome1 = function(){ showOnly(null, false); stopBubbleGame(); };
+
+  /* ---------------- BUBBLE GAME ---------------- */
+  const canvas = document.getElementById('bubbleCanvas');
+  const ctx = canvas && canvas.getContext ? canvas.getContext('2d') : null;
+  let bubbles = [], effects = [], bubbleLoop = null, bubbleScore = 0;
+
+  function spawnBubble() {
+    if (!canvas) return;
+    const r = Math.random() * 14 + 18;        // bigger easier to click
+    const x = Math.random() * (canvas.width - 2*r) + r;
+    const y = canvas.height + r + Math.random() * 40;
+    const dy = -(0.8 + Math.random() * 1.2);
+    const dx = (Math.random() - 0.5) * 1.2;
+    const color = `hsl(${Math.floor(Math.random()*360)},70%,55%)`;
+    bubbles.push({x, y, r, dx, dy, color});
+  }
+
+  function startGame() { // kept name "startGame" to match existing HTML if present
+    // start bubble game + show tabs
+    startBubbleGameInternal();
+    showOnly('bubble', true);
+  }
+
+  function startBubbleGameInternal() {
+    if (!canvas) return;
+    bubbles = []; effects = []; bubbleScore = 0;
+    if (scoreDisplay) scoreDisplay.innerText = bubbleScore;
+    if (bubbleLoop) cancelAnimationFrame(bubbleLoop);
+    for (let i=0;i<12;i++) spawnBubble();
+    bubbleLoop = requestAnimationFrame(drawBubbles);
+  }
+
+  function drawBubbles() {
+    if (!ctx) return;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    if (Math.random() < 0.04) spawnBubble();
+
+    // draw bubbles
+    for (let i=bubbles.length-1;i>=0;i--) {
+      const b = bubbles[i];
+      b.x += b.dx; b.y += b.dy;
+      if (b.x - b.r < 0) { b.x = b.r; b.dx = Math.abs(b.dx); }
+      if (b.x + b.r > canvas.width) { b.x = canvas.width - b.r; b.dx = -Math.abs(b.dx); }
+
+      // gradient fill
+      const grad = ctx.createRadialGradient(b.x - b.r*0.3, b.y - b.r*0.45, b.r*0.1, b.x, b.y, b.r);
+      grad.addColorStop(0, 'rgba(255,255,255,0.85)');
+      grad.addColorStop(0.18, b.color);
+      grad.addColorStop(1, b.color);
+      ctx.beginPath();
+      ctx.fillStyle = grad;
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+      ctx.fill();
+      ctx.closePath();
+
+      // shine
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.arc(b.x - b.r/3, b.y - b.r/3, b.r/4, 0, Math.PI*2);
+      ctx.fill();
+      ctx.closePath();
+
+      if (b.y + b.r < 0) bubbles.splice(i,1);
+    }
+
+    // effects (rings + particles)
+    for (let i=effects.length-1;i>=0;i--) {
+      const ef = effects[i];
+      ctx.save();
+      ctx.globalAlpha = ef.alpha;
+      ctx.beginPath();
+      ctx.lineWidth = Math.max(2, ef.radius * 0.08);
+      ctx.strokeStyle = ef.color;
+      ctx.arc(ef.x, ef.y, ef.radius, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.closePath();
+
+      ef.particles.forEach(p=>{
+        ctx.globalAlpha = p.alpha;
+        ctx.beginPath();
+        ctx.fillStyle = p.color || ef.color;
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+        ctx.fill();
+        ctx.closePath();
+        p.x += p.vx; p.y += p.vy; p.vy += 0.06; p.alpha -= 0.03;
+      });
+      ctx.restore();
+      ef.radius += 3; ef.alpha -= 0.03;
+      if (ef.alpha <= 0) effects.splice(i,1);
+    }
+
+    bubbleLoop = requestAnimationFrame(drawBubbles);
+  }
+
+  function popEffect(x,y,color) {
+    const ef = { x, y, radius: 8, alpha: 1, color, particles: [] };
+    for (let i = 0; i < 9; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 1 + Math.random()*2.4;
+      ef.particles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed * 0.6,
+        size: 3 + Math.random()*2,
+        alpha: 1,
+        color
+      });
+    }
+    effects.push(ef);
+  }
+
+  if (canvas) {
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      for (let i=bubbles.length-1;i>=0;i--) {
+        const b = bubbles[i];
+        const d = Math.hypot(b.x - mx, b.y - my);
+        if (d < b.r) {
+          bubbles.splice(i,1);
+          popEffect(b.x, b.y, b.color);
+          bubbleScore++;
+          if (scoreDisplay) scoreDisplay.innerText = bubbleScore;
+          break;
+        }
+      }
+    });
+  }
+
+  function stopBubbleGame() {
+    if (bubbleLoop) cancelAnimationFrame(bubbleLoop);
+    bubbleLoop = null; bubbles = []; effects = [];
+    if (ctx && canvas) ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+
+  /* attach start button if present (non-inline) */
+  if (startBubbleBtn) {
+    startBubbleBtn.addEventListener('click', (ev) => { ev.preventDefault(); startGame(); });
+  }
+  /* Ensure any inline onclick="startGame()" still works */
+  window.startGame = startGame;
+  window.stopBubbleGame = stopBubbleGame;
+
+  /* ---------------- Matching game ---------------- */
+  const matchingBoard = document.getElementById('matchingBoard');
+  const EMOJIS = ['🐶','🦊','🦄','🐼','🐸','🦁','🐵','🦉','🚀','🎯']; // 10 unique -> 20 cards
+  let matchScore = 0, flipped = [], lockBoard = false, matchedPairs = 0;
+
+  function startMatchingGame() {
+    if (!matchingBoard) return;
+    matchingBoard.innerHTML = '';
+    matchScore = 0; flipped = []; lockBoard = false; matchedPairs = 0;
+    if (matchScoreDisplay) matchScoreDisplay.innerText = matchScore;
+    const deck = shuffleArray([...EMOJIS, ...EMOJIS]); // 20 cards
+    deck.forEach(symbol => {
+      const tile = document.createElement('div');
+      tile.className = 'game-card-tile';
+      tile.dataset.value = symbol;
+      tile.innerHTML = `<div class="game-card-inner"><div class="game-card-front">?</div><div class="game-card-back">${symbol}</div></div>`;
+      tile.addEventListener('click', () => handleFlip(tile));
+      matchingBoard.appendChild(tile);
+    });
+  }
+
+  window.startMatchingGame = function(){ startMatchingGame(); showOnly('match', true); };
+
+  if (startMatchBtn) startMatchBtn.addEventListener('click', (e)=>{ e.preventDefault(); window.startMatchingGame(); });
+
+  function handleFlip(tile) {
+    if (lockBoard || tile.classList.contains('flipped')) return;
+    tile.classList.add('flipped');
+    flipped.push(tile);
+    if (flipped.length === 2) {
+      const [a, b] = flipped;
+      const valA = a.dataset.value, valB = b.dataset.value;
+      if (valA === valB) {
+        // matched
+        a.classList.add('matched');
+        b.classList.add('matched');
+        matchScore += 5; matchedPairs++;
+        if (matchScoreDisplay) matchScoreDisplay.innerText = matchScore;
+        // animate then remove
+        setTimeout(()=> {
+          a.classList.add('removing'); b.classList.add('removing');
+          setTimeout(()=>{ if (a.parentNode) a.remove(); if (b.parentNode) b.remove(); }, 320);
+        }, 420);
+
+        flipped = [];
+        // if finished, reshuffle and restart after brief pause
+        if (matchedPairs === EMOJIS.length) {
+          setTimeout(()=> {
+            alert(`You matched all pairs! 🎉 Score: ${matchScore}`);
+            startMatchingGame(); // reshuffle + restart
+          }, 700);
+        }
+      } else {
+        // not a match
+        lockBoard = true;
+        setTimeout(()=>{
+          a.classList.remove('flipped'); b.classList.remove('flipped');
+          flipped = []; lockBoard = false;
+        }, 750);
+        matchScore = Math.max(0, matchScore - 1);
+        if (matchScoreDisplay) matchScoreDisplay.innerText = matchScore;
+      }
+    }
+  }
+
+  // shuffle helper
+  function shuffleArray(arr) {
+    const a = arr.slice();
+    for (let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  /* ----------------- attempt to wire your existing site Home button(s) ----------------- */
+  // look for some common home selectors on the page (safe: no duplicate buttons created)
+  const possibleHomeSelectors = ['#homeBtn','.home-btn','button.home','a.home','[data-home]','button[title*="Home"]','button[aria-label*="home"]'];
+  let foundHome = null;
+  for (const sel of possibleHomeSelectors) {
+    const el = document.querySelector(sel);
+    if (el) { foundHome = el; break; }
+  }
+  if (foundHome) {
+    foundHome.addEventListener('click', (e) => {
+      // hide game tabs and stop bubble game
+      showOnly(null, false);
+      stopBubbleGame();
+    });
+  }
+  // also expose goHome for any inline onclicks in your page
+  //window.goHome1 = function(){ showOnly(null,false); stopBubbleGame(); };
+
+  /* initial state: hide everything */
+  showOnly(null, false);
+})();
+
+
+function stopGame(){
+  if (bubbleLoop) { cancelAnimationFrame(bubbleLoop); bubbleLoop = null; }
+}
+
+/* -------------------------
+   Hook up UI: initial display & wiring
+   ------------------------- */
+document.getElementById('app').style.display = 'none'; // hidden until user clicks home circle
+
+// initialize index to 0 and progress to 0
+state.idx.emotional = 0; state.idx.personality = 0; state.idx.awareness = 0;
+
+// When user opens surveys, show the initial tab and question
+function openSurveys(){
+  hideAllMain();
+  document.getElementById('surveys-section').style.display='block';
+  document.getElementById('app').style.display='block';
+  state.view='surveys';
+  // restore any preexisting saved answers to inputs
+  restoreAnswersAndShowFirst();
+  switchSurvey('emotional');
+}
+
+// restore answers into DOM inputs if returning to survey
+function restoreAnswersAndShowFirst(){
+  // emotional selects
+  for(let i=0;i<mentalQs.length;i++){
+    const sel = document.querySelector(`#emotional-q-${i} select`);
+    if(sel && state.answers.emotional[i] !== null) sel.value = state.answers.emotional[i];
+  }
+  // personality radios
+  for(let i=0;i<personalityQs.length;i++){
+    const val = state.answers.personality[i];
+    if(val !== null){
+      const radios = document.querySelectorAll(`#personality-q-${i} input[type="radio"]`);
+      radios.forEach(r => r.checked = (String(r.value) === String(val)));
+    }
+  }
+  // awareness selects
+  for(let i=0;i<selfAwarenessQs.length;i++){
+    const sel = document.querySelector(`#awareness-q-${i} select`);
+    if(sel && state.answers.awareness[i] !== null) sel.value = state.answers.awareness[i];
+  }
+}
+
+// wire tab clicks
+document.getElementById('tab-emotional').addEventListener('click', ()=>switchSurvey('emotional'));
+document.getElementById('tab-personality').addEventListener('click', ()=>switchSurvey('personality'));
+document.getElementById('tab-awareness').addEventListener('click', ()=>switchSurvey('awareness'));
+
+// ensure 'Next' buttons start disabled
+document.getElementById('emotional-next').disabled = true;
+document.getElementById('personality-next').disabled = true;
+document.getElementById('awareness-next').disabled = true;
+
+// expose a few functions to window so HTML onclicks still work
+window.openSurveys = openSurveys;
+window.openBreathing = openBreathing;
+window.openBubble = openBubble;
+//window.goHome1 = goHome;
+window.prev = prev;
+window.next = next;
+window.onAnswer = onAnswer;
+window.startBreathing = startBreathing;
+window.stopBreathing = stopBreathing;
+window.startGame = startGame;
+window.stopGame = stopGame;
+window.createEmotionalQuestions = createEmotionalQuestions;
+window.createPersonalityQuestions = createPersonalityQuestions;
+window.createAwarenessQuestions = createAwarenessQuestions;
+window.computeResults = computeResults;
+window.closeModal = closeModal;
+window.openSurveysHome = function(){ switchSurvey('emotional'); };
+
+// show initial home
+document.getElementById('app').style.display='none';
+document.getElementById('home').style.display='flex';
+</script>
+</body>
+</html>

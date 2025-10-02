@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Virtual Journal — Test</title>
+  <style>
+    :root { --blue: #0077b6; --blue-dark: #005f86; --bg:#f9fbff; --muted:#eaf6ff; }
+    body { font-family: system-ui, Arial, sans-serif; background: white; color: #03435a; margin: 0; padding: 20px; display:flex; justify-content:center; }
+    .container { width: 100%; max-width: 920px; }
+
+    /* HOME */
+    .home { display:flex; justify-content:center; gap:24px; margin: 30px 0; }
+    .circle {
+      width:150px; height:150px; border-radius:50%;
+      background: var(--blue); color:white; display:flex; align-items:center; justify-content:center;
+      text-align:center; font-size:16px; cursor:pointer; transition: transform .15s, background .15s; box-shadow:0 6px 18px rgba(0,0,0,0.08);
+      user-select:none;
+    }
+    .circle:hover { transform: scale(1.05); background: var(--blue-dark); }
+
+    /* Sections */
+    .tabContent { background: var(--bg); border: 2px solid var(--blue); border-radius:12px; padding:18px; margin-bottom:20px; display:block; }
+    .hidden { display:none !important; }
+
+    /* Journal */
+    #journalInput { width:100%; min-height:160px; border-radius:10px; padding:12px; border:1px solid var(--blue); resize:vertical; font-size:15px; background:white; color:#123; box-sizing:border-box; }
+    .journal-controls { display:flex; gap:10px; justify-content:flex-end; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+    .btn { background:var(--blue); color:white; border:none; padding:10px 14px; border-radius:8px; cursor:pointer; font-size:15px; }
+    .btn:hover { background:var(--blue-dark); }
+
+    #journalArchive { list-style:none; padding:0; margin: 10px 0 0 0; max-height:220px; overflow:auto; }
+    #journalArchive li { background:var(--muted); padding:10px; border-radius:8px; margin-bottom:8px; display:flex; gap:8px; align-items:flex-start; justify-content:space-between; }
+    .archive-left { max-width:78%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .small { padding:6px 8px; font-size:13px; border-radius:6px; }
+
+    .top-title { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:10px; }
+    .placeholder { color:#567; font-size:14px; }
+
+    /* simple responsive */
+    @media (max-width:600px) {
+      .home { gap:12px; }
+      .circle { width:120px; height:120px; font-size:14px; }
+      .journal-controls { justify-content:center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- HOME SCREEN (single, unique) -->
+    <div class="home" id="homeScreen">
+      <div class="circle study" id="studyCircle">📚<br/>Study Tools</div>
+      <div class="circle career" id="careerCircle">💼<br/>Career Selector</div>
+      <div class="circle journal" id="journalCircle">📘<br/>Virtual Journal</div>
+    </div>
+
+    <!-- STUDY (placeholder) -->
+    <div id="studySection" class="tabContent hidden">
+      <div class="top-title">
+        <h2>📚 Study Tools</h2>
+        <button class="btn" id="studyBack">⬅️ Back</button>
+      </div>
+      <p class="placeholder">Placeholder for Study Tools content.</p>
+    </div>
+
+    <!-- CAREER (placeholder) -->
+    <div id="careerSection" class="tabContent hidden">
+      <div class="top-title">
+        <h2>💼 Career Selector</h2>
+        <button class="btn" id="careerBack">⬅️ Back</button>
+      </div>
+      <p class="placeholder">Placeholder for Career Selector content.</p>
+    </div>
+
+    <!-- JOURNAL SECTION -->
+    <div id="journalSection" class="tabContent hidden" aria-live="polite">
+      <div class="top-title">
+        <h2>📘 Virtual Journal</h2>
+        <div>
+          <button class="btn" id="mainpageBtn">🏠 Mainpage</button>
+          <button class="btn" id="muteBtn">🔈 Mute</button>
+          <button class="btn" id="backBtn">⬅️ Back</button>
+        </div>
+      </div>
+
+      <!-- Draft message -->
+      <div style="margin-bottom:8px;">
+        <strong>Draft for:</strong> <span id="draftDateLabel"></span>
+      </div>
+
+      <!-- journal input -->
+      <textarea id="journalInput" placeholder="Start writing your thoughts..."></textarea>
+
+      <!-- actions -->
+      <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+        <button class="btn" id="voiceBtn">🎤 Speak</button>
+        <button class="btn" id="saveDraftBtn">📥 Save Draft</button>
+        <button class="btn" id="saveJournalBtn">💾 Save to Archive</button>
+      </div>
+
+      <h3 style="margin-top:16px;">🗂️ Archive</h3>
+      <ul id="journalArchive"></ul>
+    </div>
+
+    <!-- Hidden audio (user must trigger play in most browsers) -->
+    <audio id="backgroundMusic" preload="auto" loop>
+      <!-- Replace the src below with your music file path.
+           If you don't want music, remove the <source> line or comment it out. -->
+      <!-- <source src="background-music.mp3" type="audio/mpeg"> -->
+    </audio>
+
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Journal test script loaded');
+
+      // Elements
+      const homeScreen = document.getElementById('homeScreen');
+      const studyCircle = document.getElementById('studyCircle');
+      const careerCircle = document.getElementById('careerCircle');
+      const journalCircle = document.getElementById('journalCircle');
+
+      const studySection = document.getElementById('studySection');
+      const careerSection = document.getElementById('careerSection');
+      const journalSection = document.getElementById('journalSection');
+
+      const studyBack = document.getElementById('studyBack');
+      const careerBack = document.getElementById('careerBack');
+
+      const mainpageBtn = document.getElementById('mainpageBtn');
+      const muteBtn = document.getElementById('muteBtn');
+      const backBtn = document.getElementById('backBtn');
+
+      const journalInput = document.getElementById('journalInput');
+      const saveDraftBtn = document.getElementById('saveDraftBtn');
+      const saveJournalBtn = document.getElementById('saveJournalBtn');
+      const voiceBtn = document.getElementById('voiceBtn');
+
+      const archiveList = document.getElementById('journalArchive');
+      const draftDateLabel = document.getElementById('draftDateLabel');
+
+      const backgroundMusic = document.getElementById('backgroundMusic');
+
+      // Small navigation state
+      let previousScreen = 'home';
+
+      /* -------------------------
+         Utility: date key for drafts
+         ------------------------- */
+      function todayKey() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth()+1).padStart(2,'0');
+        const day = String(d.getDate()).padStart(2,'0');
+        return `${y}-${m}-${day}`;
+      }
+      function draftStorageKey(dateStr = null) {
+        return 'journalDraft_' + (dateStr || todayKey());
+      }
+      function archiveKey() { return 'journalArchive'; }
+
+      /* -------------------------
+         Show / hide sections
+         ------------------------- */
+      function hideAllSections() {
+        homeScreen.classList.add('hidden');
+        studySection.classList.add('hidden');
+        careerSection.classList.add('hidden');
+        journalSection.classList.add('hidden');
+      }
+      function showHome() {
+        hideAllSections();
+        homeScreen.classList.remove('hidden');
+        previousScreen = 'home';
+      }
+      function showStudy() {
+        hideAllSections();
+        studySection.classList.remove('hidden');
+        previousScreen = 'study';
+      }
+      function showCareer() {
+        hideAllSections();
+        careerSection.classList.remove('hidden');
+        previousScreen = 'career';
+      }
+      function showJournal() {
+        hideAllSections();
+        journalSection.classList.remove('hidden');
+        previousScreen = 'journal';
+        loadDraft(); // load today's draft when opening journal
+      }
+
+      // Attach circle clicks
+      studyCircle.addEventListener('click', showStudy);
+      careerCircle.addEventListener('click', showCareer);
+      journalCircle.addEventListener('click', showJournal);
+
+      // Back buttons
+      studyBack.addEventListener('click', showHome);
+      careerBack.addEventListener('click', showHome);
+      mainpageBtn.addEventListener('click', showHome);
+      backBtn.addEventListener('click', () => {
+        // Back goes to career screen (as requested). If already on career, go home.
+        if (previousScreen === 'career') { showHome(); } else { showCareer(); }
+      });
+
+      /* -------------------------
+         Draft + Archive handling
+         ------------------------- */
+      function loadDraft() {
+        const key = draftStorageKey();
+        draftDateLabel.textContent = todayKey();
+        const draft = localStorage.getItem(key) || '';
+        journalInput.value = draft;
+        console.log('Loaded draft key:', key, 'len:', draft.length);
+      }
+
+      function saveDraft() {
+        const key = draftStorageKey();
+        localStorage.setItem(key, journalInput.value);
+        console.log('Saved draft to', key);
+        showToast('Draft saved');
+      }
+
+      function loadArchive() {
+        const raw = localStorage.getItem(archiveKey());
+        let arr = [];
+        if (raw) {
+          try { arr = JSON.parse(raw); }
+          catch(e) { console.error('Invalid archive JSON', e); arr = []; }
+        }
+        return arr;
+      }
+
+      function saveArchive(arr) {
+        localStorage.setItem(archiveKey(), JSON.stringify(arr));
+      }
+
+      function renderArchive() {
+        const arr = loadArchive();
+        archiveList.innerHTML = '';
+        if (arr.length === 0) {
+          const li = document.createElement('li');
+          li.innerHTML = '<div class="archive-left">No archive entries yet.</div>';
+          archiveList.appendChild(li);
+          return;
+        }
+        arr.slice().reverse().forEach((entry, revIndex) => {
+          // revIndex 0 = newest
+          const li = document.createElement('li');
+          const left = document.createElement('div');
+          left.className = 'archive-left';
+          left.title = entry.text;
+          left.textContent = `${entry.timestamp} — ${entry.text.substring(0,80)}${entry.text.length>80 ? '…' : ''}`;
+          const right = document.createElement('div');
+          right.style.display='flex';
+          right.style.gap='6px';
+
+          const delBtn = document.createElement('button');
+          delBtn.className = 'small';
+          delBtn.textContent = '🗑️ Delete';
+          delBtn.addEventListener('click', () => {
+            // compute actual index in normal order
+            const realIndex = arr.length - 1 - revIndex;
+            arr.splice(realIndex,1);
+            saveArchive(arr);
+            renderArchive();
+          });
+
+          right.appendChild(delBtn);
+          li.appendChild(left);
+          li.appendChild(right);
+          archiveList.appendChild(li);
+        });
+      }
+
+      // Save to archive (manually) — this takes current draft and pushes it into archive
+      function archiveCurrentDraft(noteLabel = 'Saved') {
+        const text = journalInput.value.trim();
+        if (!text) { showToast('Nothing to save'); return; }
+        const arr = loadArchive();
+        const now = new Date();
+        const entry = {
+          timestamp: now.toLocaleString(),
+          dateKey: todayKey(),
+          text
+        };
+        arr.push(entry);
+        saveArchive(arr);
+        // clear today's draft
+        localStorage.removeItem(draftStorageKey());
+        journalInput.value = '';
+        renderArchive();
+        showToast('Saved to archive');
+        console.log('Archived entry', entry);
+      }
+
+      // Move yesterday draft to archive automatically (if present)
+      function autoArchiveYesterday() {
+        const today = new Date();
+        const yesterday = new Date(today.getTime() - (24*60*60*1000));
+        const yKey = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
+        const yesterdayKey = draftStorageKey(yKey);
+        const yDraft = localStorage.getItem(yesterdayKey);
+        if (yDraft && yDraft.trim().length > 0) {
+          // move to archive
+          const arr = loadArchive();
+          arr.push({ timestamp: `${yKey} (auto)`, dateKey: yKey, text: yDraft });
+          saveArchive(arr);
+          localStorage.removeItem(yesterdayKey);
+          console.log('Auto-archived yesterday draft:', yesterdayKey);
+        }
+      }
+
+      // Periodic check (every minute) to auto-archive yesterday's draft
+      setInterval(() => {
+        try { autoArchiveYesterday(); } catch(e){ console.error(e); }
+      }, 60 * 1000);
+
+      /* -------------------------
+         Voice recognition
+         ------------------------- */
+      let recognition = null;
+      let listening = false;
+      if (window.SpeechRecognition || window.webkitSpeechRecognition) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+
+        recognition.onstart = () => { listening = true; voiceBtn.textContent = '🎙️ Listening... (click to stop)'; };
+        recognition.onend = () => { listening = false; voiceBtn.textContent = '🎤 Speak'; };
+        recognition.onerror = (e) => { console.error('Speech error', e); listening = false; voiceBtn.textContent = '🎤 Speak'; showToast('Speech error'); };
+
+        recognition.onresult = (ev) => {
+          const transcript = Array.from(ev.results).map(r => r[0].transcript).join(' ');
+          journalInput.value = (journalInput.value + ' ' + transcript).trim();
+          showToast('Voice captured');
+        };
+
+        voiceBtn.addEventListener('click', () => {
+          if (!listening) {
+            try { recognition.start(); } catch(e) { console.error(e); }
+          } else {
+            recognition.stop();
+          }
+        });
+
+      } else {
+        // disable voice button if not supported
+        voiceBtn.disabled = true;
+        voiceBtn.textContent = '🎤 Not supported';
+        voiceBtn.title = 'SpeechRecognition not available in this browser';
+        console.warn('SpeechRecognition not supported in this browser.');
+      }
+
+      /* -------------------------
+         Music mute toggle (respect autoplay policies)
+         ------------------------- */
+      let musicPlaying = false;
+      function tryPlayMusic() {
+        if (!backgroundMusic || !backgroundMusic.querySelector) return;
+        const playPromise = backgroundMusic.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            musicPlaying = true;
+            backgroundMusic.muted = false;
+            muteBtn.textContent = '🔈 Mute';
+            console.log('Music started');
+          }).catch(err => {
+            // autoplay blocked; keep it paused until user interaction
+            console.warn('Autoplay prevented:', err);
+            backgroundMusic.muted = true;
+            musicPlaying = false;
+            muteBtn.textContent = '🔈 Start music';
+          });
+        }
+      }
+      // Try to play when script loads (may be blocked)
+      tryPlayMusic();
+
+      muteBtn.addEventListener('click', () => {
+        // If there is no <source> in <audio>, inform user
+        if (!backgroundMusic.querySelector('source')) {
+          // toggle simulated state: instruct user how to add music
+          if (backgroundMusic.paused) {
+            showToast('No audio file set. Add a <source> in the <audio> element or set backgroundMusic.src.');
+            return;
+          }
+        }
+        // If paused, try to play (this will often require a user gesture which this click provides)
+        if (backgroundMusic.paused) {
+          backgroundMusic.play().then(() => {
+            backgroundMusic.muted = false;
+            muteBtn.textContent = '🔈 Mute';
+          }).catch((e) => {
+            console.error(e);
+            showToast('Unable to play audio (autoplay policy).');
+          });
+          return;
+        }
+        // toggle mute
+        backgroundMusic.muted = !backgroundMusic.muted;
+        muteBtn.textContent = backgroundMusic.muted ? '🔇 Unmute' : '🔈 Mute';
+      });
+
+      /* -------------------------
+         Buttons: Save / Draft / Archive
+         ------------------------- */
+      saveDraftBtn.addEventListener('click', () => {
+        saveDraft();
+      });
+      saveJournalBtn.addEventListener('click', () => {
+        archiveCurrentDraft('Manual');
+      });
+
+      /* -------------------------
+         Small toast helper (visual feedback)
+         ------------------------- */
+      function showToast(msg) {
+        // quick lightweight toast using console and title attribute fallback
+        console.log('TOAST:', msg);
+        // also set document title briefly to show feedback when testing quickly
+        const prev = document.title;
+        document.title = msg + ' — ' + prev;
+        setTimeout(()=> document.title = prev, 1200);
+      }
+
+      /* -------------------------
+         Initial load
+         ------------------------- */
+      renderArchive();
+      loadDraft();
+      showHome();
+
+      // debug helper: show helpful console message
+      console.log('Ready. Click the circles to open sections. If clicking still does nothing, open DevTools (F12) and check console for errors.');
+
+      /* -------------------------
+         Developer notes / troubleshooting tips
+         -------------------------
+         - If clicking the Journal circle does nothing:
+            1) Make sure you do NOT have two elements with id="homeScreen" in your page.
+            2) Make sure this script is not duplicated or run twice.
+            3) Open the Console (F12) and check for errors — paste them here if you want help.
+         - If the microphone button does not start:
+            * Some browsers require the page be served via HTTPS and user permission for mic.
+            * SpeechRecognition is only supported in Chrome & Edge (not Firefox).
+         - If music doesn't auto-start: browser autoplay policies will block it. Click the mute/play button to start music.
+      ------------------------- */
+    });
+  </script>
+</body>
+</html>
